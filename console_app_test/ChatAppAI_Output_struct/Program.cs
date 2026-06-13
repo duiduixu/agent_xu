@@ -1,8 +1,17 @@
 ﻿
 using System.ClientModel;
+using System.Text.Json;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Configuration;
 using OpenAI;
+
+static string GetRequiredConfigValue(IConfiguration configuration, string key)
+{
+    return !string.IsNullOrWhiteSpace(configuration[key])
+        ? configuration[key]!
+        : throw new InvalidOperationException($"Missing required configuration value: {key}");
+}
+
 
 IConfigurationRoot config = new ConfigurationBuilder()
     .AddUserSecrets<Program>()
@@ -27,15 +36,15 @@ string review = "I'm happy with the product!";
 var response = await chatClient.GetResponseAsync<Sentiment>($"What's the sentiment of this review? {review}");
 Console.WriteLine($"Sentiment: {response.Result}");
 
+var review3 = "This product worked okay.";
+ChatResponse<SentimentRecord> response3 = await chatClient.GetResponseAsync<SentimentRecord>($"What's the sentiment of this review? {review3}");
+Console.WriteLine($"Raw response: {response3}");
+Console.WriteLine($"Raw response result: {JsonSerializer.Serialize(response3.Result)}");
+Console.WriteLine($"ResponseText: {response3.Result.ResponseText}");
+Console.WriteLine($"ReviewSentiment: {JsonSerializer.Serialize(response3)}");
 
+record SentimentRecord(String ResponseText, Sentiment ReviewSentiment);
 
-
-static string GetRequiredConfigValue(IConfiguration configuration, string key)
-{
-    return !string.IsNullOrWhiteSpace(configuration[key])
-        ? configuration[key]!
-        : throw new InvalidOperationException($"Missing required configuration value: {key}");
-}
 
 public enum Sentiment
 {
