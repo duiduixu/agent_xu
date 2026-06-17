@@ -12,5 +12,4 @@ builder.Services
     .AddMcpServer()
     .WithStdioServerTransport()
     .WithTools<RandomNumberTools>();
-
 await builder.Build().RunAsync();

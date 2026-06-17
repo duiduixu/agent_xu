@@ -6,6 +6,7 @@ It demonstrates how you can easily create an MCP server using C# and publish it 
 The MCP server is built as a self-contained application and does not require the .NET runtime to be installed on the target machine.
 However, since it is self-contained, it must be built for each target platform separately.
 By default, the template is configured to build for:
+
 * `win-x64`
 * `win-arm64`
 * `osx-arm64`
@@ -86,6 +87,24 @@ For both VS Code and Visual Studio, the configuration file uses the following se
       ]
     }
   }
+}
+
+{
+	"servers": {
+		"my-mcp-server-local-project-test": {
+			"type": "stdio",
+			"command": "dotnet",
+			"args": [
+				"run",
+				"--project",
+				"SampleMcpServer.csproj"
+			],
+			"env":{
+				"WEATHER_CHOICES": "sunny,humid,freezing"
+			}
+		}
+	},
+	"inputs": []
 }
 ```
 
