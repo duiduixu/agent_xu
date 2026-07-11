@@ -124,9 +124,82 @@ Fenghui.Plugin.Injection.Aps.Services.SchedulingProblemValidator.ValidateProblem
 规则 2：同模具始终允许（不需要考虑颜色交叉污染）？？？？？
  大多数高级排产软件支持设置“换模/换色矩阵（Setup Matrix）”。只需在矩阵中定义“同模具换色 = 5分钟”，排产引擎就会自动将这些工单拉近、合并。
  SchedulingSettings中的默认配置
+ 当修改排法算法插件相关代码时，需同步单元测试代码的修改
+
+
+ 【
 @Services/SchedulingPreprocessor.cs 中的如下这段代码必须是分钟数吗？未来有没有可能是秒级的需求，是否应该考虑？请告诉我这里是否有必要进行优化？
           // 3k. 计算交期分钟数和预计生产时长
             var dueTime = workOrder.DueDateTime ?? scheduleTime.AddMinutes(input.Settings.HorizonMinutes);
+            这里目前必须是分钟粒度，因为当前整个排程内部模型都是按“分钟”为基本时间单位建模的，不只是这一行代码。
+
+  你提到的代码：
+
+  var dueTime = workOrder.DueDateTime ?? scheduleTime.AddMinutes(input.Settings.HorizonMinutes);
+  
+  它本身只是“如果工单没有交期，就默认使用排程基准时间 + 排程窗口”的逻辑。真正决定单位的是后面这行：
+
+  Math.Max(0, (int)Math.Ceiling((dueTime - scheduleTime).TotalMinutes))
+
+  这里把交期转换成了相对 ScheduleTime 的分钟数，写入 Job.DueMinutes。后续 DurationMinutes、StartMinutes、EndMinutes、HorizonMinutes、MoldReadyTimes、MachineAnchorState.ReadyMinutes 都是分钟。
+
+  所以当前不是局部一处“用分钟”，而是完整链路都是分钟：
+
+  - SchedulingSettings.HorizonMinutes
+  - Job.DurationMinutes
+  - Job.DueMinutes
+  - ScheduledOperation.StartMinutes
+  - ScheduledOperation.EndMinutes
+  - SetupCalculator.Compute(...) 返回分钟
+  - CpSatOptimizer 里的 start/end/horizon 全是整数分钟
+  - 输出时再 ScheduleTime.AddMinutes(...) 转成绝对时间
+
+  未来是否可能有秒级需求
+  有可能，但要看业务是否真的需要。
+
+  注塑排程场景里，通常排产颗粒度是分钟级甚至更粗，原因是：
+
+  - 换模时间通常以分钟计，比如 30 分钟
+  - 工单生产时长通常很长，秒级误差对排产顺序影响很小
+  - CP-SAT 用整数变量建模，粒度越细，变量取值范围越大，求解压力越高
+  - 秒级排程会让 48 小时 horizon 从 2880 变成 172800，模型范围放大 60 倍
+
+  所以如果只是普通 APS 排产，不建议现在改成秒级。
+
+  有没有必要现在优化
+  我建议：现在没有必要改成秒级，但有必要把“内部时间单位是分钟”这件事明确化。
+
+  当前代码的问题不是用分钟，而是单位约定散落在命名和注释里。它已经通过 HorizonMinutes、DurationMinutes、DueMinutes 表达了单位，但如果后续有人看到 DateTime 和 AddMinutes，仍可能疑惑是否支持秒级。
+
+  更务实的优化方向是：
+
+  1. 保持当前分钟级模型不变。
+  2. 在文档或核心模型注释里明确：当前 APS 内部统一以“分钟”为排程粒度。
+  3. 如果未来确实需要秒级，不要局部把 AddMinutes 改成 AddSeconds，而是做一次统一的时间粒度抽象。
+
+  如果未来要支持秒级，需要改哪些地方
+  这会是系统级改造，不是一行代码能解决。至少要改：
+
+  - SchedulingSettings.HorizonMinutes 改成更通用的 HorizonUnits 或新增时间粒度配置
+  - Job.DurationMinutes / DueMinutes
+  - ScheduledOperation.StartMinutes / EndMinutes
+  - MachineAnchorState.ReadyMinutes
+  - MoldReadyTimes
+  - SetupCalculator.Compute(...)
+  - ObjectiveCalculator
+  - CpSatOptimizer 的所有时间变量和约束
+  - SchedulingEngine.BuildScheduledOrders(...) 的 AddMinutes
+  - 所有注释、字段名和测试样例
+
+  如果只改这一处，会导致单位混乱，比不改更危险。
+
+  结论
+  当前这段代码保留分钟级是合理的，而且符合注塑 APS 排产场景。现在不建议为了“未来可能秒级”提前改造。
+
+  建议只做轻量优化：明确约定“当前内部时间单位为分钟”。等将来真的有秒级需求，再统一设计时间粒度，例如引入 TimeResolution 或内部 tick 单位，而不是在现有代码里零散替换。
+  】
+
+  
 
 {
     "PluginId": "fenghui.plugin.injection.aps",
