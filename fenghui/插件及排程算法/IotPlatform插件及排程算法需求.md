@@ -125,6 +125,10 @@ Fenghui.Plugin.Injection.Aps.Services.SchedulingProblemValidator.ValidateProblem
  大多数高级排产软件支持设置“换模/换色矩阵（Setup Matrix）”。只需在矩阵中定义“同模具换色 = 5分钟”，排产引擎就会自动将这些工单拉近、合并。
  SchedulingSettings中的默认配置
  当修改排法算法插件相关代码时，需同步单元测试代码的修改
+排程开始时间：工单列表的最早计划开始时间
+换线成本权重，颜色惩罚权重，洗料时间？？
+已经有计划开始时间的待排产工单：1.按最早计划时间开始根据优先级逐个往后排；2.以计划开始时间为准，需计算计划完成时间。
+
 
 
  【
