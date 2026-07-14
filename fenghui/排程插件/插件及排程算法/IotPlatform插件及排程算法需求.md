@@ -127,7 +127,8 @@ Fenghui.Plugin.Injection.Aps.Services.SchedulingProblemValidator.ValidateProblem
  当修改排法算法插件相关代码时，需同步单元测试代码的修改
 排程开始时间：工单列表的最早计划开始时间
 换线成本权重，颜色惩罚权重，洗料时间？？
-已经有计划开始时间的待排产工单：1.按最早计划时间开始根据优先级逐个往后排；2.以计划开始时间为准，需计算计划完成时间。
+已经有计划开始时间的待排产工单：1.按最早计划时间开始根据优先级逐个往后排；2.以计划开始时间为准，需计算计划完成时间。做成可配置方案
+HorizonMinutes">排程时间窗口（分钟）。所有 Job 的 Start/End 取值范围为 [0, Horizon]。？？
 
 
 Fenghui.Plugin.Injection.Aps.Services.CpSatOptimizer.Optimize是一个使用了CP-SAT求解器的排程优化功能，我看完了里面的代码后很多地方不理解，我简单看了下Google-Or-Tools的CP-SAT入门教程后，还是无法理解这块代码，请帮我整理一份针对这块代码的详细的学习教程文档，最好是小白也能看懂，特别是CP-SAT相关的方法请详细说明用法，请用markdown格式整理成文档并输出到doc文件夹下

@@ -3,6 +3,22 @@ using System;
 using Google.OrTools.Sat;
 
 
+Dictionary<(string a, string b), string> keyValuePairs = new Dictionary<(string a, string b), string>
+{
+    { ("key1", "value1"), "Description for key1-value1" },
+    { ("key2", "value2"), "Description for key2-value2" },
+    { ("key3", "value3"), "Description for key3-value3" }
+};
+keyValuePairs.Add(("key4", "value4"), "Description for key4-value4");
+keyValuePairs.Add(("key5", "value5"), "Description for key5-value5");
+keyValuePairs.Add(("key3", "value333"), "Description for key3-value333");
+keyValuePairs.Add(("key3", "value3222"), "Description for key3-value3222");
+keyValuePairs.Add(("key1", "value111"), "Description for key1-value111");
+var filteredPairs = keyValuePairs.Where(x => String.Equals(x.Key.a, "key3", StringComparison.OrdinalIgnoreCase)).Select(x => x.Value).ToArray();
+Console.WriteLine($"Filtered Values for key3:{String.Join(", ", filteredPairs)}");
+Console.WriteLine($"Total Count of keyValuePairs: {keyValuePairs.Count}");
+Console.WriteLine("-----------------------------");
+
 CpModel model = new CpModel();
 int numVars = 3;
 IntVar x = model.NewIntVar(0, numVars, "x");
