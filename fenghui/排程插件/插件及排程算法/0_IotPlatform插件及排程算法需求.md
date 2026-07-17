@@ -162,6 +162,8 @@ CP-SAT参数自定义，比如最大求解时间，目前是20秒；StringParame
 8. 插件管理前端界面，查询、安装、启用、禁用、卸载插件等功能
 
 
+今天发现这个算法还存在空指针异常问题，比如colorMap.TryGetValue(Normalize(workOrder.ProductColor)代码中如果workOrder.ProductColor为NULL就会报错，我已经修复了此处以及“3c. 检查是否有该产品对应的模具-设备关系”中的relationGroups存在的问题，请帮我排查下当前算法是否还存在类似这样的问题，另外你也可以延伸一下你的想法把其他可能存在的问题检查一遍以避免生产上出现异常报错。
+在input = JsonSerializer.Deserialize<SchedulingInput>(payloadText, JsonSerializerOptions);这行代码下面增加关键字段非空校验逻辑，workorders的工单号、工单状态、产品id等字段不能为空  ，mpdrelations的code、name、holesnum、productid、device_id，ColorGroupRule的GroupName、priority、color，colorswitchrules的startcolor、startpriority、endcolor、endpriority
 
 
 Fenghui.Plugin.Injection.Aps.Services.CpSatOptimizer.Optimize是一个使用了CP-SAT求解器的排程优化功能，我看完了里面的代码后很多地方不理解，我简单看了下Google-Or-Tools的CP-SAT入门教程后，还是无法理解这块代码，请帮我整理一份针对这块代码的详细的学习教程文档，最好是小白也能看懂，特别是CP-SAT相关的方法请详细说明用法，请用markdown格式整理成文档并输出到doc文件夹下
