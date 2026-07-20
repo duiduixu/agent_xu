@@ -160,6 +160,7 @@ CP-SAT参数自定义，比如最大求解时间，目前是20秒；StringParame
 6. CP-SAT参数自定义，比如最大求解时间，目前是20秒；StringParameters = "max_time_in_seconds:20,num_search_workers:8,log_search_progress:false"
 7. 全量重排
 8. 插件管理前端界面，查询、安装、启用、禁用、卸载插件等功能
+9. 插件管理功能，代码逻辑中检查运维字段，比如创建人、修改人信息
 
 
 今天发现这个算法还存在空指针异常问题，比如colorMap.TryGetValue(Normalize(workOrder.ProductColor)代码中如果workOrder.ProductColor为NULL就会报错，我已经修复了此处以及“3c. 检查是否有该产品对应的模具-设备关系”中的relationGroups存在的问题，请帮我排查下当前算法是否还存在类似这样的问题，另外你也可以延伸一下你的想法把其他可能存在的问题检查一遍以避免生产上出现异常报错。
