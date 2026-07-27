@@ -166,6 +166,214 @@ CP-SAT参数自定义，比如最大求解时间，目前是20秒；StringParame
 今天发现这个算法还存在空指针异常问题，比如colorMap.TryGetValue(Normalize(workOrder.ProductColor)代码中如果workOrder.ProductColor为NULL就会报错，我已经修复了此处以及“3c. 检查是否有该产品对应的模具-设备关系”中的relationGroups存在的问题，请帮我排查下当前算法是否还存在类似这样的问题，另外你也可以延伸一下你的想法把其他可能存在的问题检查一遍以避免生产上出现异常报错。
 在input = JsonSerializer.Deserialize<SchedulingInput>(payloadText, JsonSerializerOptions);这行代码下面增加关键字段非空校验逻辑，workorders的工单号、工单状态、产品id等字段不能为空  ，mpdrelations的code、name、holesnum、productid、device_id，ColorGroupRule的GroupName、priority、color，colorswitchrules的startcolor、startpriority、endcolor、endpriority
 
+目前的排产算法，当用户传入的排产工单中的实际开始时间比基准时间还早，就会出现奇怪的问题。比如基准时间取的是工单中最早计划开始时间，但是用户传入的排产工单中存在一些已经开始生产的工单，这些工单的实际开始时间可能比待排产工单的计划开始时间更早，会造成这些生产中的工单计算出的starttime和endtime不准确，同时因为这些已生产工单提前进入固定工序，所以也不会进入CP-SAT求解器优化，但已生产工单最终输出的apsstarttime和apsendtime是通过starttime和endtime相对分钟数转换得出的，所以最终输出这些原本就已排产的apsstarttime和apsendtime也不准确，请问应该怎么处理这种情况呢？我尝试了把计划开始时间和实际开始时间作为基准时间也无法解决，请提供可行的解决方案，以markdown格式输出到当前目录。
+建议在算法中增加对实际开始时间的判断，如果实际开始时间早于基准时间，则以实际开始时间为基准时间进行排产计算。
+
+按文档方案做完整功能改造，在编码过程中请勿移除现有代码的合理注释，新增的关键代码需要有简单明了的注释。
+
+
+现在用户增加一种新的工单状态叫“已排产”，请将该状态放在WorkOrderStatus中待排产的后面。如果工单状态是“已排产”，则在排产算法中计算开始时间和结束时间；如果工单状态是“下发”，则不需要计算开始时间和结束时间，直接原样数据返回。在入参中，
+
+请根据如下需求改造代码 ，给算法入参中的工单增加apsstarttime和apsendtime这两个字段，去掉actualstarttime字段，状态是“下发”及之后的工单直接将apsstarttime和apsendtime输出不需要计算，“下发”工单要在CP-SAT中进入设备模具互斥约束（使用apsstarttime和apsendtime作为生产开始时间和结束时间），防止“下发”工单和本次排产工单在同一台设备或同一模具上重叠。
+
+请根据如下需求修改代码，要求在排产入参SchedulingInput中增加异常占用区间，标记某台设备或者某个模具在starttime和endtime这段时间内是没办法生产的，排产的时候不要把工单排到这个时间段，如下是定义的入参字段
+scheduleabnormal:[
+   {
+   "f_id": "eba13320-ea95-472d-8fb6-d77e916670e1",
+   "type": "人员异常",
+   "moldid": "",
+   "endtime": "2026-07-21 12:00:00",
+   "deviceid": "E0001",
+   "start_by": "superAdmin",
+   "starttime": "2026-07-21 00:00:00"
+   }
+]
+请在改造代码时考虑代码可扩展性，未来可能还会增加类似的限制，有必要时使用适合的设计模式，在编码过程中请勿移除现有代码的合理注释，新增的关键代码需要有简单明了的注释。
+
+
+该算法马上要上线到生产环境，用户不希望上线后出现排产失败、CAP-SAT求解失败或数据不准确的问题，请仔细排查可能存在的问题。如果存在问题，请列出问题清单并给出详细的可优化的方案，方案以markdown格式存放在../../doc目录下
+代码优化
+
+帮我创建一个全新的单元测试类，目的是测试算法的性能，验证大批量工单的时候能否正常排产，要求定义变量“工单数”允许我随时修改该变量进行性能测试，测试数据你可以随机生成不同种类的工单（或者参照Fenghui.Plugin.Injection.Aps.Tests.ApsSchedulingExecutorByJsonTests.getTestJson中的工单数据进行自动生成，不要直接写JSON，我可能会测试几百个甚至几千个工单进行测试），要求生成的工单数据有待排产、已排产、中断、下发这几种状态。把工单数量放在测试方法最前面（默认100个工单），允许我随时修改以测试不同量级的工单数据，Payload中的scheduleconfig和settings也放到测试方法的前面允许我自行配置（目前你可以固定硬编码默认值）。如果你有什么好的想法也可以加入放这个测试方法中。
+1.感觉Service中的文件夹有点乱，请分析并给出工程结构调整建议；2.编辑器总提示【Namespace does not correspond to file location, must be: 'Plugin.ApsScheduling.Services'】，是否应该根据提示修改？
+CpSatOptimizer中的【 StringParameters = "max_time_in_seconds:30,num_search_workers:8,log_search_progress:false"】现在是硬编码，要求将这几个参数放到SchedulingInput中允许用户自定义（schedulingInput中定义CP-SAT配置对象属性，该对象中要有这三个属性，方便未来扩展CP-SAT其他参数，默认值分别是30、8、false），请改造相关代码，也需要增加相关入参校验。代码改完后，也改下刚才的测试类ApsSchedulingPerformanceTests，同SchedulingSettings一样允许用户配置这几个参数。
+在日志里统计关键步骤的用时情况
+
+
+CP-SAT 建模前可行性预检：占用区间合并逻辑与预处理类似，是否可以考虑使用工具类共享代码？
+
+【不要进行全量测试，仍会有原先5个失败】
+
+ PluginPackageName 如果改成Fenghui.Plugin.Injection.Aps会有什么影响吗？
+
+
+
+## 启发式排产中的PushAfterResourceOccupations不能直接删除。*****待优化
+它当前是启发式结果满足“未来固定工单/异常区间不能被占用”的唯一补偿逻辑。
+
+  原因是启发式初排只使用：
+
+  - MachineAnchors，只处理排产起点时仍在占用的区间
+  - MoldReadyTimes，同样只处理跨越排产起点的占用
+
+  见 /D:/code/Fenghui.Plugin/src/Fenghui.Plugin.Injection.Aps/Services/Preprocessing/SchedulingPreprocessor.cs:451。如果异常或固定工单在排产起点之后才开始，例如 10:00-12:00 的设备异常、排产从 08:00 开始，启发式会把新工单排进 10:00-12:00。
+
+  PushAfterResourceOccupations 正是在 /D:/code/Fenghui.Plugin/src/Fenghui.Plugin.Injection.Aps/Services/Heuristics/HeuristicScheduler.cs:47 将这些工序往后推，避免与 ResourceOccupations 重叠。
+
+  CP-SAT 本身不依赖它，因为 CP-SAT 会将全部固定工序和异常区间建为禁排区间，见 /D:/code/Fenghui.Plugin/src/Fenghui.Plugin.Injection.Aps/Services/Optimization/CpSatOptimizer.cs:140。但删除后仍会有实际影响：
+
+   场景                             删除后的结果                                                                                                                                                                                                                                                                    
+  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   CP-SAT 成功                      最终结果通常仍正确，但启发式 Hint 可能非法，降低热启动质量
+  ───────────────────────────────  ────────────────────────────────────────────────────────────
+   CP-SAT 超时、无解或结果不完整    回退到与异常/固定工单冲突的启发式结果
+  ───────────────────────────────  ────────────────────────────────────────────────────────────
+   预检失败                         当前设计仍返回启发式结果，会直接输出冲突排程
+  ───────────────────────────────  ────────────────────────────────────────────────────────────
+   没有未来资源占用                 基本无影响
+
+  另外，这个方法本身也有一个结构问题：它在排完后逐个后推工序，但后推后没有重新计算同设备连续工序之间的换模时间。因此不能简单视为最终理想实现。
+
+  更合适的改造是：不要删除约束，而是删除这个“事后修正”方法，将资源占用检查前移到 BuildMachineSequences 和 EvaluateMachine 的排程决策中。
+
+  具体做法：
+
+  1. 预处理阶段按设备、模具建立已合并的占用窗口。
+  2. 启发式为候选工单计算开始时间时，找“同时避开设备和模具占用区间”的最早可用时间。
+  3. 发生顺延后，以顺延后的结束时间更新机器锚点和模具就绪时间。
+  4. 后续工单据此重新计算换模时间与颜色约束。
+
+  这样可以安全移除 PushAfterResourceOccupations，并保证启发式结果本身可行、CP-SAT Hint 有效、回退结果也不会撞占用。
+
+
+## CP-SAT 建模前可行性预检：1.目前只检查已锁定到单台设备的工单，多台设置的工单要不要检查？2.除了目前已有的预检，排查下是否还有其他的预检可以加入？
+• 可以加，但要分层处理，避免预检变成另一个简化版 CP-SAT。
+
+  1. 多台设备工单要不要检查？
+
+  要检查，但不能简单按“每台设备分摊”检查，否则容易误判。
+
+  当前检查的是：
+
+  只能排在 E0001 的工单总工时 > E0001 在 horizon 内可用时间
+
+  这是安全的，必然不可行。
+
+  多设备工单可以加一个更通用但仍安全的容量检查：
+
+  某一组设备 S 的总可用时间 < 只能在 S 内选择设备的工单总工时
+
+  例子：
+
+  设备 A 可用 100 分钟
+  设备 B 可用 100 分钟
+
+  工单1 只能 A，80 分钟
+  工单2 只能 B，80 分钟
+  工单3 可选 A/B，100 分钟
+
+  A/B 总可用 200 分钟
+  只能在 A/B 内排的工单总工时 260 分钟
+  => 当前 horizon 必然不可行
+
+  这个检查可以覆盖：
+
+  - 单设备锁定工单
+  - 多设备候选但候选池整体容量不够
+  - 多个产品共同挤占同一组设备的问题
+
+  实现上建议放在 SchedulingFeasibilityPrechecker，不要进 Optimizer。
+
+  2. 还可以加入哪些预检？
+
+  我建议优先加这几类，都是“低误判、解释清楚”的预检。
+
+  1. 设备组容量预检
+
+  上面说的多设备版本。输出类似：
+
+  CP-SAT 未执行：当前排程窗口内设备组 E0001,E0002 时间不够，需排 260 分钟，可用 200 分钟。
+
+  2. 模具容量预检
+
+  CP-SAT 里有模具互斥：同一个模具同一时刻只能给一个工单用。
+
+  所以可以检查：
+
+  某模具在 horizon 内可用时间 < 使用该模具的动态工单总工时
+
+  输出：
+
+  CP-SAT 未执行：当前排程窗口内模具 ZXKX434 时间不够，需排 4107 分钟，可用 1200 分钟。
+
+  这个很有价值，因为即使设备足够，模具也可能成为瓶颈。
+
+  3. 单个工单无连续可排窗口
+
+  总可用时间够，不代表有连续窗口。
+
+  例子：
+
+  设备 E0001 可用两个窗口：60 分钟 + 60 分钟
+  工单需要连续生产 100 分钟
+
+  总可用 120 分钟，但这个工单仍然排不进去。
+
+  可以检查：
+
+  每个工单是否至少有一台候选设备 + 对应模具存在连续空档 >= 工单时长
+
+  这个比容量检查更接近 CP-SAT 的真实失败原因。
+
+  4. horizon 口径一致性检查
+
+  现在要特别注意：预检说的是 Settings.HorizonMinutes，但 CP-SAT 的 HorizonEndMinutes 当前是由 HorizonMinutes / due date / resource occupations 共同撑大的。
+
+  如果业务定义里 HorizonMinutes 是硬窗口，那后续最好统一口径：
+
+  CP-SAT 的变量上界也应以排程窗口为准
+
+  否则会出现“预检认为窗口不够，但模型窗口被其他数据拉长”的语义差异。
+
+  我的建议优先级
+
+  先加这三个：
+
+  P1：设备组容量预检
+  P1：模具容量预检
+  P2：单工单连续空档预检
+
+  颜色顺序暂时不建议做预检。当前颜色规则基本总能按优先级排出一个方向，而且 CP-SAT 里对“固定工单锚点 -> 动态首单”的颜色约束还不完整，贸然预检容易和模型行为不一致。
+
+
+
+
+##  其他
+
+模具id和机器id可能存在相同值 ，如果模具id和机器id都从001开始编号，会不会影响当前的排产算法，如果有影响请提供修复方案【已验证，不会出问题】
+为防止用户传入的abnormal的id可能存在重复的情况，应该重新生成唯一id【已解决】
+
+    /// 给“机器”算一个锚点状态：在本次排产的起始时刻，机器是不是还被占着；如果被占着，最早什么时候才算真正空出来。
+
+            //只有“开始时间早于/等于起点，结束时间晚于/等于起点”的窗口，才说明这台机器在起点时刻确实被卡住了。
+机器就绪时间和模块就绪时间
+var readyMinutes = machineGroup
+                .Where(x => x.StartMinutes <= optimizationCutoffMinutes && x.EndMinutes >= optimizationCutoffMinutes)
+
+            // var dynamicIntervals = jobVars
+            //     .Where(x => x.Key.MachineId == machine.Id)
+            //     .Select(x => x.Value.Interval);
+            //
+            // var fixedIntervals = problem.FixedOperations
+            //     .Where(x => x.MachineId == machine.Id)
+            //     .Select(op =>
+            //     {
+            //         var s = model.NewIntVar(op.StartMinutes, op.StartMinutes, $"fixed_s_{op.Job.Id}");
+            //         var e = model.NewIntVar(op.EndMinutes, op.EndMinutes, $"fixed_e_{op.Job.Id}");
+            //         return model.NewIntervalVar(s, op.EndMinutes - op.StartMinutes, e, $"fixed_i_{op.Job.Id}");
+            //     });
+            //
+            // model.AddNoOverlap(dynamicIntervals.Concat(fixedIntervals));
 
 Fenghui.Plugin.Injection.Aps.Services.CpSatOptimizer.Optimize是一个使用了CP-SAT求解器的排程优化功能，我看完了里面的代码后很多地方不理解，我简单看了下Google-Or-Tools的CP-SAT入门教程后，还是无法理解这块代码，请帮我整理一份针对这块代码的详细的学习教程文档，最好是小白也能看懂，特别是CP-SAT相关的方法请详细说明用法，请用markdown格式整理成文档并输出到doc文件夹下
 

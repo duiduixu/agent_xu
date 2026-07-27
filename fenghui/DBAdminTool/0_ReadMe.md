@@ -123,6 +123,44 @@ DbAdmin_最终开发文档.md需要再调整下，模块名称请改成“06-DbA
 
 
 
-在正式开始测试之前：处理GlobalUsing，更改应用模块名称，单元测试项目
+
+
+
+
+IDbDialect中的很多实现方法是不是可以放在一个基类或者抽像类中？因为我们目前使用的是SqlSugar框架，增删改查这种用SqlSugar是不是都能兼容，不需要各种数据库单独实现？【咨询过AI，不建议这么做，这种底层数据库管理工具最好直接用底层ADO，速度更快，为了和项目框架保持一致；使用SqlSugar的ADO也可以，它并没有经过 SqlSugar ORM 的实体映射层】
+导入校验可参考现有项目框架对比看下是否还可以进一步完善
+D:\code\iotplatformv5\02-应用模块\06-DbAdmin\DbAdmin.Service\MetadataAppService.cs这个类的GetIndexesAsync方法中有根据数据库类型判断执行不同的SQL（该类中的好几个方法都有这种判断），我觉得这样的判断不太合理，不方便未来扩展数据库类型，请推荐一种更好的可扩展的实现方式，比如参照IDbDialect接口一样的实现方式，或者直接放到IDbDialect中一起是否合适，请分析并找出合适的解决方案，
+注意：
+不要直接到处写 ExecuteCommandAsync，定义统一接口
+public interface IDbExecutor
+{
+
+    Task<int> ExecuteAsync(
+        string sql);
+
+
+    Task<List<T>> QueryAsync<T>(
+        string sql);
+
+
+}
+public class SqlSugarDbExecutor 
+       : IDbExecutor
+这样以后如果换：Dapper    原生ADO.NET  国产数据库驱动；  都不用改业务。
+
+目前DbAdmin还在开发阶段，现在发现一个问题，当前DbAdmin模块是不是和SqlSugar绑定太深了，到处直接调SqlSugar的方法（比如ExecuteCommandAsync），希望能定义统一接口，这样以后如果换Dapper或原生ADO.NET或国产数据库驱动，都不用改业务。请分析下是否有必要重构，如果需要请提供一个markdown格式的方案文档。
+06-DbAdmin模块中，SqlSafetyAnalyzer这个SQL安全分析器类，目前能支持DbEngineType中的所有数据库吗？如果不能支持请优化代码，要求扩展性高，方便未来扩展新的数据库管理系统，该模块的开发需求见【D:\code\iotplatformv5\03-应用服务\IotPlatform\DbAdmin_最终开发文档.md】
+日志表本身就有创建人信息，所以OperatorId和OperatorName可以去掉了
+创建人id，创建人名称，修改人，修改人名称
+
+  下一步我建议直接继续两件事：
+  1. 重新启动 IotPlatform.Web.Core。
+  2. 用真实接口验证 schemas / indexes / ddl，再决定是否需要动 SqlServerDialect.GetTableDdlAsync(...) 和 ExecutePagedQueryAsync(...) 的分页归一化链路。
+   
+
+   
+# 在正式开始测试之前：
+  处理GlobalUsing，更改应用模块名称，单元测试
+
 
 
