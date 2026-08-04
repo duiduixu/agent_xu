@@ -234,6 +234,7 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   测试
 
 
+  
   单元测试
   接口测试
   底层数据库方言源码
@@ -249,12 +250,13 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
 
 
 
-## 字段测试
+## 测试
   varchar和text字段测试
   字段长度、精度、小数位
   默认值只支持 NULL、布尔值、数字、单引号字符串或受控时间函数：目前支持的函数包括"NULL", "TRUE", "FALSE", "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "CURRENT_DATE", "CURRENT_TIME", "NOW()"【新增表和修改表结构接口，检查下
   【已处理】修改表结构：不支持在本接口中修改主键字段，不支持在本接口中删除主键字段,不支持通过新增字段创建主键成员
   修改表结构：主键、外键约束、主键自增测试
+  导入导出接口性能测试
 
 ## 在正式开始测试之前：
   处理GlobalUsing，单元测试->让AI只看接口定义设计单元测试，测试所有可能的应用场景
@@ -263,21 +265,35 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   
 
 ## 待完成任务：
-  给前端生成接口文档：特别是创建表结构和修改表结构，不同类型应该如何传递字段值，数据库表数据CRUD；给前端生成一份接口调用指南（比如更新表数据接口，通过什么接口获取表数据及主键，如何传递入参）
-  单元测试（先删除现有零散的测试）：需要给DbAdmin添加单元测试，未来需要给其他模块也添加单元测试，请提供建议，在当前解决方案中应该将单元测试放在哪里比较合适？
-  实体管理页面：数据源接口、查询列表接口、常用字段，实体类分页查询接口、实体类详情查询接口、常用字段相关接口、标签
+  给前端生成接口文档：特别是创建表结构和修改表结构，不同类型应该如何传递字段值，数据库表数据CRUD；给前端生成一份接口调用指南（比
+  工程结构调整
+  IDbDialect具体实现类拆分，工程结构调整，特别是原生批量导入（代码分散，回滚没有日志，其他日志，注释）
+  如更新表数据接口，通过什么接口获取表数据及主键，如何传递入参）
   数据库CRUD：添加数据库接口，删除数据库接口是否需要？修改数据库
   创建表、更新表、查询字段列表等接口的字段属性名称最好能和旧接口一致或者接近
+  近期加的很多单元测试项目和文件都放在什么位置？接下来还需要给DbAdmin添加单元测试，未来需要给其他模块也添加单元测试，请提供建议，在当前解决方案中应该将单元测试放在哪里比较合适？
+  大批量数据测试：CRUD、导入导出，支持的几种数据库类型都要测试下
+  实体管理页面：数据源接口、查询列表接口、常用字段，实体类分页查询接口、实体类详情查询接口、常用字段相关接口、标签
   查询、导出、控制台查询分页功能要求限制MaxPageSize，如果合适的话请定义在DbAdmin.Entity的Constant中
-  BuildInsertBatchCommand生成的SQL是否合理？是否有更好的方案？
+  【已完成】 D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面是现有的数据库管理工具接口，老版本前端有个页面叫“实体管理”，实体管理中用到的接口有【1.数据库查询接口：查询条件有数据源id、表名关键字（模糊搜索），老接口代码在IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中；2.】
+  【已完成】 SqlConsoleAppService控制台相关接口，不需要安全校验，所有语句都可执行，在将来的版本中再加安全和权限校验，当前最重要的是尽快发布第一个版本，请考虑实际情况进行代码改造和优化，以让SqlConsoleAppService满足上线标准。
+ 【已完成】 导出功能的临时文件存储位置改成和导入接口一样，目录名称统一用DbAdminTemp(Path.Combine(FileVariable.TemporaryFilePath, "DbAdminTemp"))，导出接口中添加文件清理功能（删除超过24小时的临时文件），SqlConsoleAppService控制台数据导出也参照此方案优化。
+   【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面，DbAdmin.Service.ImportExportAppServiceImport导入接口目前只支持50M，太小了，需要支持更大文件导入，比如200M，请优化代码，是否先上传文件到临时文件夹再导入比较合适？如果你有有更好的方案则按你的方案进行改造。请注意志临时文件名称唯一性及临时文件清理，【尽量复用目前系统中已有的文件上传功能，参照Common.Core.Manager.Files.IFileManager】,临时文件清理时间同导入接口（24小时），
+   【已完成】DbAdmin.Service.ImportExportAppService.Export这个导出接口需要支持百万数据，请优化代码，是否先将数据导出到临时文件夹再将文件返回前端比较合适？如果你有有更好的方案则按你的方案进行改造。请注意临时文件名称唯一性及临时文件清理，【尽量复用目前系统中已有的文件下载功能，参照Common.Core.Manager.Files.IFileManager】，【注：FileManager类中现有的方法不需要“取消令牌”，请勿添加取消令牌参数】
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面，DbAdmin.Service.ImportExportAppService.Import是数据导入接口，目前该导入接口的“AllOrNothing全量原子导入策略是否存在性能问题？如果有优化空间请进行代码优化，本次优化后该接口将会发布到生产环境使用。
+  【已完成】导入接口代码，导入策略是AllOrNothing时确保全量原子导入是可以的，但是策略为BestEffort时调用的InsertStreamingRowsAsync方法中为什么还有全量事务管理？请确认代码是否正确，BestEffort这个策略是允许部份成功的，如有问题请进行相关代码改造
+  【已完成】导入接口，如果导入策略是AllOrNothing但是计算出的useStaging为false时直接抛出异常说明不支持的原因，移除【InsertStreamingRowsAsync中所有跨批次事务会话、提交、回滚和释放代码。
+  【已完成】请实现按数据库原生批量导入：SQL Server SqlBulkCopy、PostgreSQL COPY、MySQL MySqlBulkCopy，目前使用的事务也根据你的想法进行优化，如果考虑性能的话是是不是把全量导入功能去掉比较合适？
+  【已完成】导入功能，目前的数据库原生批量导入，可能产生部份成功部份失败，适合现在导入策略ImportPolicyEnum.BestEffort。现在需要改造接口，如果用传入的导入策略是AllOrNothing时，要求导入的数据要么全部成功要么全部失败，不允许出现部份成功的情况，如果能实现则请改造代码。
+  【已完成】BuildInsertBatchCommand生成的SQL是否合理？是否有更好的方案？
   【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面，SchemaDesignAppService、MetadataAppService、SqlConsoleAppService、【已完成】TableDataAppService、ImportExportAppService这几个Service是核心接口。目前发现各服务之间有些代码可以复用但目前没有复用，请根据以下要求项目代码综合考虑扩展性、健壮性、长期可维护性对代码进行优化，适当的时候可以使用设计模式提升代码质量，也可将通用逻辑下沉到DbAdmin.Infrastructure中，具体如何实施请你根据综合情况择优处置：1.获取表字段、主键、索引、等功能，如能复用请尽量复用，但不能复用时不要勉强。2.“TableDataAppService中的表数据查询”和“ImportExportAppService中的表数据导出”的分页数据查询及排序等逻辑，如能复用请尽量复用，但不能复用时不要勉强，目前的表数据表导出功能无法根据指定条件导出数据（你可以帮我补上这个功能，最好能和查询表数据的条件逻辑共用）。3.SqlConsoleAppService中的控制台查询数据功能，对查询结果进行分页展示和导出的逻辑如果能复用“表数据查询”则可复用，但不能复用时请勿勉强。【补充：考虑实际情况复用代码逻辑，择优处置即可】
   排查可复用代码逻辑，如存在则尽量复用。【补充：考虑实际情况复用代码逻辑，择优处置即可】
-  修改接口路由,去掉api
+  【已完成】修改接口路由,去掉api
   【已完成】表数据导入接口，是否能正常导入所有数据类型。表数据导出接口是否能正常导出所有数据类型，二进制字段如何处理？【新增统一值编解码服务，按数据库引擎和字段类型处理文本、JSON、布尔、整数、数值、日期时间、Guid 等常用类型。不支持的类型（包括二进制）导入时返回类型不支持问题。】
   【已完成】导出数据接口，不支持的类型，不要直接报错，请直接导出长度字节，形如二进制一样输出【[二进制数据，{length} 字节]】
   DbAdmin.Service.ImportExportAppService中的表数据导入和导出接口，是否存在性能问题，如有则请进行优化
   【已完成】导入接口，IsIdentityLikeColumn是否有必要下沉到数据库方言IDbDialect中实现？ExecuteInsertBatchAsync中switch判断和底层数据库SQL是否有必要下沉到数据库方言中实现？如有必要请优化代码实现，整体排查下导入接口是否还在存类似的情况应该都要优化，根据DbEngineType判断实现不同逻辑的地方应该要下沉到数据库方言中实现，请先分析可行性再修改代码。
-  【待优化，考虑去掉全量原子导入功能？？考虑导入大批量数据的时候去掉全量导入？？？】保留“预检一次、事务写入再读取一次”的流程：该设计保证 AllOrNothing 在数据库写入前完成校验，并能正确决定 identity 列处理方式；不为了减少一次读取而引入长事务或牺牲回滚安全性。
+  【已完成】保留“预检一次、事务写入再读取一次”的流程：该设计保证 AllOrNothing 在数据库写入前完成校验，并能正确决定 identity 列处理方式；不为了减少一次读取而引入长事务或牺牲回滚安全性。
   固定常量不要直接写到逻辑代码中，至少应该定义在类的属性中，比如if (values.Count > 1000) throw new ArgumentException("IN 条件值数量不能超过 1000");排查项目中是否还存在类似的情况并修复
   【已完成】TableDataAppService的查询接口，QueryFilterItem.Operator操作符请使用枚举，QueryFilterItem.Logic请使用枚举
   【已完成】TableDataAppService的删除接口和更新接口，只需要按主键删除或更新数据即可，不需要按唯一键删除或更新数据，请改造代码
@@ -294,7 +310,7 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   【】在SchemaDesignAppService中新增一个实体类列表分页查询接口，具体查询逻辑在DbEntityManageSyncService中实现（该类需要增加实体类列表分页查询接口（参数：表名、configId），同时请看下是否需要取一个更合适的类名称），可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中的方法实现
   【】在SchemaDesignAppService中新增一个实体类详情查询接口，具体查询逻辑在DbEntityManageSyncService中实现，可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.GetInfo实现。
   【】分析MetadataAppService中的接口代码，判断是否已经达到生产环境可用的标准，如有优化空间或更好的解决方案，请帮我优化相关代码逻辑
-  
+
 ### 优化方向：
   1.大数据量建议增加游标分页，50至500万条数据建议使用游标分页，大于500万条数据强制使用游标分页
   2.DbAdmin引用了DataWeaving中的DbEntityManage实体
@@ -304,9 +320,11 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   6.导出EXCEL：确保所有类型数据都能正常显示，二进制字段如何处理？
   7.导入模式：清空表后导入的安全性问题
   8.大批量数据导入导出时，增加警告提示：尽量在空闲时间执行，比如10万以上
+  9.Sql控制台执行支持一请求包含多条 SQL（例如 SELECT; UPDATE），并按顺序实际执行
 ### 风险
   删除字段，丢失数据，修改主键
   导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
+  sql控制台：执行风险SQL
   
   
 
