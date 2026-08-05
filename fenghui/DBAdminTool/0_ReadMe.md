@@ -240,6 +240,7 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   底层数据库方言源码
 
 
+AI自我优化，代码审查
 
 ## 现有接口
 ### 表单设计 
@@ -265,17 +266,44 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   
 
 ## 待完成任务：
+D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，该模块第一版代码已开发完成，接下来需要交给前端对接，等对接完成并测试通过后就会发布生产，请仔细分析该模块代码在发布生产前还有哪些P0问题必须解决，其中接口权限控制暂时不用管，最终请输出需要解决的问题清单及解决方案，以markdown格式输出到当前目录
   给前端生成接口文档：特别是创建表结构和修改表结构，不同类型应该如何传递字段值，数据库表数据CRUD；给前端生成一份接口调用指南（比
+  SchemaDesignAppService：增加添加字段、修改字段、删除字段、添加索引、删除索引接口。
   工程结构调整
-  IDbDialect具体实现类拆分，工程结构调整，特别是原生批量导入（代码分散，回滚没有日志，其他日志，注释）
   如更新表数据接口，通过什么接口获取表数据及主键，如何传递入参）
-  数据库CRUD：添加数据库接口，删除数据库接口是否需要？修改数据库
-  创建表、更新表、查询字段列表等接口的字段属性名称最好能和旧接口一致或者接近
-  近期加的很多单元测试项目和文件都放在什么位置？接下来还需要给DbAdmin添加单元测试，未来需要给其他模块也添加单元测试，请提供建议，在当前解决方案中应该将单元测试放在哪里比较合适？
   大批量数据测试：CRUD、导入导出，支持的几种数据库类型都要测试下
-  实体管理页面：数据源接口、查询列表接口、常用字段，实体类分页查询接口、实体类详情查询接口、常用字段相关接口、标签
-  查询、导出、控制台查询分页功能要求限制MaxPageSize，如果合适的话请定义在DbAdmin.Entity的Constant中
-  【已完成】 D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面是现有的数据库管理工具接口，老版本前端有个页面叫“实体管理”，实体管理中用到的接口有【1.数据库查询接口：查询条件有数据源id、表名关键字（模糊搜索），老接口代码在IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中；2.】
+  RequireDatabaseTarget和RequireTableTarget校验代码，很多地方都有引用，可以封装
+  【不处理，先回退数据库切换功能，目前先支持现有数据源】DbAdmin模块的“数据库连接及数据源切换功能”，与当前项目其他模块的“数据库连接及数据源切换”是否会存在冲突？请仔细检查，如存在问题请输出问题原因及解决办法，以防止发布生产后出现重大BUG。
+  【不处理】添加和修改表结构：可以去掉索引，单独增加“添加索引接口”和“删除索引接口”
+  工程结构调整，特别是原生批量导入（代码分散，回滚没有日志，其他日志，注释）
+  【已完成】检查并补充16-DbAdmin模块中接口的swagger注释，为16-DbAdmin中所有公共方法和核心私有方法加上简单明了的注释，如果现英文注释则都改成中文注释，补全16-DbAdmin模块中的异常日志。【
+  D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，为 16-DbAdmin 模块中所有对外接口（Controller 层、公开服务方法）补全 Swagger 文档注解（中文）。
+为所有公共方法和“核心私有方法”（模块中关键逻辑的私有方法）添加简洁明了的中文 JavaDoc 注释，解释方法作用、关键参数与返回值。
+将现有英文注释全部翻译为中文（保留原意，不改实现）。
+补全异常日志：确保所有 catch 块或上层异常处理器在异常发生时记录足够上下文，包括方法名、关键输入参数（敏感信息需掩码/脱敏）、请求 id / 用户 id（若可得）、异常消息与堆栈（使用 logger.error(msg, e) 以保留堆栈）。遵循“不记录敏感信息、记录可复现调试线索”的原则。】
+   发现DbAdmin.Infrastructure.Dialects中使用的都是部份类，有没有更好的不使用部份类的实现方式？
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，IDbDialect的具体实现类目前看起来比较臃肿，接口拆开了，但所有实现类和方法都堆一块了，请分析有无必要为具体方言实现类拆分，如可以拆分，则请提供技术方案，请考虑设计模式，本次仅要求生成技术方案文档
+  【已完成】实体管理页面：数据源接口、查询列表接口、常用字段，实体类分页查询接口、实体类详情查询接口标签
+  【已完成】创建数据库接口，帮我分析下是否有必要增加形如MySql的字符集和排序规则这样的入参字段，以及前端选项列表接口。
+  【已完成】创建表、更新表、查询字段列表等接口的字段属性名称最好能和旧接口一致或者接近
+  【放弃】EntityManageAppService数据库表设计：将创建表、修改表、删除表等无数据代码下沉到Infrastructure封装类中，以便未来复用？？？
+  【已完成】ColumnDefinition类的precision是精度字段，应该是可以通过计算得出，所以添加表、修改表、添加字段、修改字段等接口入参使用的地方是否可以不需要这个字段？如果可以请去掉该字段并更新修改相关代码实现
+  【已完成】重构EntityManageAppService的创建表、修改表、删除表接口代码，目前方法中多次调用了ExecuteDdlAsync，且ExecuteDdlAsync方法中存在审计日志，现要求将审计日志移到外面实现，要求创建表、修改表、删除表这三个接口每执行一次只需要一条审计日志即可，如果失败时要求说明失败原因以及部份成功的动作，请修改代码实现。
+  【已完成】SchemaDesignAppService更名为EntityManageAppService，同时修改对应路由名称。
+  【已完成】将MetadataAppService更名为SchemaDesignAppService服务，同时修改对应路由名称，为该服务添加添加一个“生成表模板SQL”接口，接口逻辑参照【老接口IotPlatform.DataWeaving.Servers.DbEntityManageService.GetData】进行实现。
+  【处理中】1.添加数据库和删除数据库接口要求必须传数据源id，否岀报错；2.删除数据库接口不允话删除系统默认数据库且只能删除无业务表的数据库；3.创建数据库和删除数据库各自实现业务逻辑，不要抽象到ExecuteDaytaBaseDdlAsync方法中。04.为创建数据库和删除数据库添加审计日志，成功时在操作日志后追加审批日志。异常时打印错误日志并在错误日志后生成审计日志，审计日志可以抽象到一个方法。
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，在DbAdmin.Service中添加DataBaseManageService，为该服务中添加“创建数据库”、删除数据库接口，将MetadataAppService中的查询数据源中的数据库列表、查询数据库中的架构列表、查询数据库中的数据表列表接口迁移到此服务中。
+  【已完成】数据库表结构详情查询接口：需要有标签字段，"tags": ["123label"]，默认“未分组；字段类型下拉选项列表与现有表单及数据必须兼容；
+  【已完成】需要改造DbAdmin的“数据库表字段对象”和“字段的数据类型”兼容旧接口以便兼容旧的功能，也方便前端快速替换成新接口，目前老接口新建表和修改表用的字段对象（Common.Dto.DataBase.TableFieldOutput）和新接口（DbAdmin.Entity.Dto.Schema.ColumnDefinition）不一样，可用的字段类型也不一样，刚才看了下老接口创建表用的是SqlSuguar（IotPlatform.DataWeaving.Servers.DbEntityManageService.Create），老接口查询字段详情时会通过Common.Core.Manager.DataBase.IDataBaseManager.ViewDataTypeConversion统一转换后给前端，所以我希望新接口在创建和修改表时的字段类型列表要求定义枚举，枚举值从ViewDataTypeConversion转换的结果可明确为varchar、int、bigint、decimal、datetime、text、tinyint，也就是说新接口需要兼容这几个枚举值基础上可再扩展其他类型，对于接口字段对象的属性最好也能做到在兼容老接口字段的基础上再扩展其他属性（老接口TableFieldOutput，新接口对象ColumnDefinition），对于数据类型的输出也得参考Common.Core.Manager.DataBase.IDataBaseManager.ViewDataTypeConversion在DbAdmin中统一封装实现。由于字段列表改动涉及的地方比较多，比如创建表、修改表、创建字段、修改字段以及所有引用字段对象的地方都要涉及修改，请先评估并输出技术开发方案文档，文档以markdown格式输出到当前文件夹下。
+  if (_sqlSugarClient.CurrentConnectionConfig.DbType.Equals(DbType.Oracle) ||
+                        _sqlSugarClient.CurrentConnectionConfig.DbType.Equals(DbType.Kdbndp) ||
+                        _sqlSugarClient.CurrentConnectionConfig.DbType.Equals(DbType.PostgreSQL))
+                    {
+                        throw Oops.Oh(ErrorCode.D1519);
+                    }
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，用于代替旧的接口代码，目前在接口开发阶段，后续前端会逐步从老接口过渡到新接口。IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中的DbEntityManagePage接口和GetInfo接口功能需要迁移到DbAdmin中，需要新增一个Service用于管理这两个接口，迁移前后的代码不需要一致，最好是根据DbAdmin模块重写代码，接口输入参数和输出参数需要在DbAdmin中重新定义，代码核心逻辑最好是能封装在DbAdmin.Service.Internal.DbEntityManageSyncService中（因为都是实体管理功能，都是从老代码迁移过来），如果有必要可以将DbEntityManageSyncService类下沉到DbAdmin.Infrastruture中并重命名一个更合理的名称。
+  【已完成】查询、导出、控制台查询分页功能要求限制MaxPageSize，如果合适的话请定义在DbAdmin.Entity的Constant中
+  【已完成】近期加的很多单元测试项目和文件都放在什么位置？接下来还需要给DbAdmin添加单元测试，未来需要给其他模块也添加单元测试，请提供建议，在当前解决方案中应该将单元测试放在哪里比较合适？
   【已完成】 SqlConsoleAppService控制台相关接口，不需要安全校验，所有语句都可执行，在将来的版本中再加安全和权限校验，当前最重要的是尽快发布第一个版本，请考虑实际情况进行代码改造和优化，以让SqlConsoleAppService满足上线标准。
  【已完成】 导出功能的临时文件存储位置改成和导入接口一样，目录名称统一用DbAdminTemp(Path.Combine(FileVariable.TemporaryFilePath, "DbAdminTemp"))，导出接口中添加文件清理功能（删除超过24小时的临时文件），SqlConsoleAppService控制台数据导出也参照此方案优化。
    【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，目前在接口开发阶段，前端还未接入，16-DbAdmin模块中DbAdmin.Service下面，DbAdmin.Service.ImportExportAppServiceImport导入接口目前只支持50M，太小了，需要支持更大文件导入，比如200M，请优化代码，是否先上传文件到临时文件夹再导入比较合适？如果你有有更好的方案则按你的方案进行改造。请注意志临时文件名称唯一性及临时文件清理，【尽量复用目前系统中已有的文件上传功能，参照Common.Core.Manager.Files.IFileManager】,临时文件清理时间同导入接口（24小时），

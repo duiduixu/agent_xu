@@ -98,7 +98,7 @@ DbAdmin 采用“旧接口冻结，新模块承接新增需求”的策略：
 ### 4.1 模块结构
 
 ```text
-02-应用模块/06-DbAdmin/
+02-应用模块/16-DbAdmin/
 ├── DbAdmin.Entity/
 │   ├── Entity/
 │   ├── Dto/
@@ -222,12 +222,14 @@ DbAdmin 新建业务管理表主键统一使用雪花 ID。
 
 ### 6.1 路由风格
 
-接口统一使用 `GET` 或 `POST`。
+接口统一使用 `POST`。除文件导入外，请求体使用 `application/json`。
 
 强制要求：
 
-- 查询类接口使用 `GET` 或 `POST`
-- 新增、修改、删除统一使用 `POST`
+- 查询、新增、修改、删除统一使用 `POST`
+- 路由不携带数据源、数据库、表、字段和索引等动态参数
+- 每个接口只接收一个业务请求对象；对象定位信息统一放在具体的 `target` 类型中
+- 文件导入使用 `multipart/form-data`，通过 `target.sourceId`、`target.database`、`target.schema`、`target.tableName` 提供定位信息
 - 文档和实现中不使用 `PUT`
 - 文档和实现中不使用 `DELETE`
 
@@ -235,9 +237,26 @@ DbAdmin 新建业务管理表主键统一使用雪花 ID。
 
 统一使用以下前缀：
 
-- `/api/db-sources/*`
-- `/api/db-sources/{id}/tables/*`
-- `/api/db-sources/{id}/sql/*`
+- `/api/db-admin/metadata/*`
+- `/api/db-admin/table-data/*`
+- `/api/db-admin/schema/*`
+- `/api/db-admin/data-transfer/*`
+- `/api/db-admin/sql/*`
+
+表级操作的定位结构如下：
+
+```json
+{
+  "target": {
+    "sourceId": 1001,
+    "database": "app",
+    "schema": "public",
+    "tableName": "orders"
+  }
+}
+```
+
+按操作对象使用明确类型：数据源查询使用 `DbSourceTarget`，数据库或 Schema 查询使用 `DbDatabaseTarget`，表操作使用 `DbTableTarget`，字段和索引操作分别使用 `DbColumnTarget`、`DbIndexTarget`。每种类型只包含其定位所需字段。
 
 ---
 
@@ -301,15 +320,29 @@ public interface IMetadataProvider
 }
 ```
 
+### 字段默认值
+
+`ColumnDefinition.Default` 使用结构化对象，不接受原生 SQL 表达式。
+
+```csharp
+public class ColumnDefaultDefinition
+{
+    public ColumnDefaultType Type { get; set; }
+    public string? Value { get; set; }
+}
+```
+
+支持 `Keep`、`Clear`、`Constant`、`Null`、`CurrentTimestamp` 和 `CurrentUtcTimestamp`。`Constant` 按字段类型校验；时间函数仅适用于 `datetime`。创建或新增字段未传 `Default` 时不设置默认值；修改已有字段未传或设置 `Keep` 时保留原默认值，使用 `Clear` 才会删除默认值。
+
 ### 接口
 
 ```text
-GET /api/db-sources/{id}/databases
-GET /api/db-sources/{id}/schemas?database=xxx
-GET /api/db-sources/{id}/tables?database=xxx&schema=xxx
-GET /api/db-sources/{id}/tables/{table}/columns?database=xxx&schema=xxx
-GET /api/db-sources/{id}/tables/{table}/indexes?database=xxx&schema=xxx
-GET /api/db-sources/{id}/tables/{table}/ddl?database=xxx&schema=xxx
+POST /api/db-admin/metadata/databases/query
+POST /api/db-admin/metadata/schemas/query
+POST /api/db-admin/metadata/tables/query
+POST /api/db-admin/metadata/columns/query
+POST /api/db-admin/metadata/indexes/query
+POST /api/db-admin/metadata/ddl/query
 ```
 
 ---
@@ -374,10 +407,10 @@ public class UpdateRowRequest
 ### 接口
 
 ```text
-POST /api/db-sources/{id}/tables/{table}/query
-POST /api/db-sources/{id}/tables/{table}/rows/add
-POST /api/db-sources/{id}/tables/{table}/rows/update
-POST /api/db-sources/{id}/tables/{table}/rows/delete
+POST /api/db-admin/table-data/rows/query
+POST /api/db-admin/table-data/rows/add
+POST /api/db-admin/table-data/rows/update
+POST /api/db-admin/table-data/rows/delete
 ```
 
 ---
@@ -424,7 +457,7 @@ public class ColumnDefinition
     public bool IsNullable { get; set; }
     public bool IsPrimaryKey { get; set; }
     public bool IsAutoIncrement { get; set; }
-    public string? DefaultValue { get; set; }
+    public ColumnDefaultDefinition? Default { get; set; }
     public string? Comment { get; set; }
 }
 
@@ -440,14 +473,36 @@ public class IndexDefinition
 ### 接口
 
 ```text
-POST /api/db-sources/{id}/tables
-POST /api/db-sources/{id}/tables/{table}/meta/update
-POST /api/db-sources/{id}/tables/{table}/columns
-POST /api/db-sources/{id}/tables/{table}/columns/{column}/update
-POST /api/db-sources/{id}/tables/{table}/columns/{column}/delete
-POST /api/db-sources/{id}/tables/{table}/indexes
-POST /api/db-sources/{id}/tables/{table}/indexes/{index}/delete
+POST /api/db-admin/schema/tables/create
+POST /api/db-admin/schema/tables/update-meta
+POST /api/db-admin/schema/tables/drop
+POST /api/db-admin/schema/columns/add
+POST /api/db-admin/schema/columns/alter
+POST /api/db-admin/schema/columns/drop
+POST /api/db-admin/schema/indexes/create
+POST /api/db-admin/schema/indexes/drop
 ```
+
+### 批量表设计保存
+
+`POST /api/db-admin/schema/tables/update-meta` 是表设计页面的统一保存接口。请求可以在一个 JSON 对象中组合表名、表说明、字段和索引变更：
+
+```json
+{
+  "target": { "sourceId": 1001, "database": "app", "schema": "public", "tableName": "orders" },
+  "newTableName": "orders_v2",
+  "comment": "订单表",
+  "addColumns": [{ "name": "remark", "dataType": "string", "length": 200, "isNullable": true }],
+  "alterColumns": [{ "originalName": "amount", "column": { "name": "totalAmount", "dataType": "decimal", "precision": 18, "scale": 2, "isNullable": false } }],
+  "dropColumns": ["legacy_code"],
+  "dropIndexes": ["ix_orders_amount"],
+  "createIndexes": [{ "name": "ix_orders_total_amount", "columns": ["totalAmount"], "isUnique": false }]
+}
+```
+
+接口按“更新表名和表说明、删普通索引、删主键、改字段、加字段、删字段、重建主键、建普通索引”执行。表名和表说明在同一次数据库命令中提交，成功后同步一次实体管理目录；每个字段变更（包括重命名及属性修改）同样只执行一次数据库命令并返回一条操作结果。执行前读取字段、索引和约束元数据并校验最终结构。涉及已有普通索引的字段修改或删除，必须在同一请求中先删除该索引并按需重建。没有外键、唯一约束或检查约束依赖时，允许修改或删除已有主键字段；新增字段设置 `IsPrimaryKey=true` 时，原表无主键则创建主键，已有主键则按原字段顺序追加为复合主键成员。新增主键字段必须非空；接口不支持修改已有字段的主键成员属性或修改自增/Identity 属性，MySQL 自增主键字段需要使用专项迁移方案。DDL 按顺序执行，失败后停止并返回已执行操作结果，不保证跨多条 DDL 的原子回滚。
+
+接口返回批次标识、当前表名与逐项执行结果。任一 DDL 或实体管理目录同步失败后立即停止，已成功执行的 DDL 不回滚。MySQL 等数据库的 DDL 可能隐式提交，因此前端必须根据返回的 `operations` 刷新当前结构。接口使用 Redis 表级分布式锁，锁等待上限为 30 秒；Redis 不可用时拒绝执行表结构变更。
 
 ---
 
@@ -485,7 +540,10 @@ InsertDataOnly        = 4
 
 ### 开发要求
 
-- 导入时采用分批写入。
+- 导入时采用数据库原生批量接口分批写入：SQL Server 使用 `SqlBulkCopy`，PostgreSQL 使用二进制 `COPY`，MySQL 使用 `MySqlBulkCopy`。
+- `BestEffort` 的每个批次独立事务并提交；后续批次失败时保留已提交批次，接口返回 `409 Conflict` 及 `IsPartialCommit`、`InsertedRows`、`FailedBatchIndex`、`FailureCode`。
+- `ImportPolicy=BestEffort` 为默认策略；`AllOrNothing` 将全部原生批次放在同一事务中提交或回滚，MySQL 仅允许导入 InnoDB 表；`BestEffort` 则按批次独立提交；两者均不自动回退到参数化 `INSERT`。
+- `TruncateAndImport`、`RebuildTableAndImport`、`CreateTableOnly` 仅保留协议枚举，当前返回不支持。
 - 导出时采用流式输出。
 - 避免一次性加载全部数据到内存。
 - 如遇超大数据量场景，本次以限制单次操作规模为主，不额外引入任务体系。
@@ -493,8 +551,8 @@ InsertDataOnly        = 4
 ### 接口
 
 ```text
-POST /api/db-sources/{id}/tables/{table}/export
-POST /api/db-sources/{id}/tables/{table}/import
+POST /db-admin/data-transfer/tables/export
+POST /db-admin/data-transfer/tables/import
 ```
 
 ---
@@ -557,9 +615,9 @@ public class SqlSafetyResult
 ### 接口
 
 ```text
-POST /api/db-sources/{id}/sql/preview
-POST /api/db-sources/{id}/sql/execute
-GET  /api/db-sources/{id}/sql/history
+POST /api/db-admin/sql/preview
+POST /api/db-admin/sql/execute
+POST /api/db-admin/sql/history/query
 ```
 
 ---
