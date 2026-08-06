@@ -223,6 +223,7 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
 风险排查：sql注入风险，sql控制台语句权限？其他风险
 
 
+2026.7.31
 本周工作：
   排产算法优化：（1）指定模具不会被排到不配对设备 （2）处理动态作业与固定作业之间的过渡关系，确保它们在同一机器上时满足换模准备时间约束。
   DbAdmin开发：完成工程结构调整、表结构设计服务、元数据查询服务、表数据服务，表数据导入导出服务相关接口功能，完成这些接口功能的代码分析、代码逻辑优化、风险排查、性能排查、复用并重构通用逻辑、审计日志等。大致看了下由AI生成底层数据库方言源码，后期还需要详细阅读和分析。其中"数据导入导出服务"完成70%左右。
@@ -233,7 +234,9 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
   接口分类及代码结构调整，完善注释、swagger注释、log日志、error日志、审计日志
   测试
 
-
+2026.8.7
+  DbAdmin开发：1.完成计划内的开发工作；2.SqlSugar数据源切换
+  测试
   
   单元测试
   接口测试
@@ -266,13 +269,30 @@ AI自我优化，代码审查
   
 
 ## 待完成任务：
-D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，该模块第一版代码已开发完成，接下来需要交给前端对接，等对接完成并测试通过后就会发布生产，请仔细分析该模块代码在发布生产前还有哪些P0问题必须解决，其中接口权限控制暂时不用管，最终请输出需要解决的问题清单及解决方案，以markdown格式输出到当前目录
   给前端生成接口文档：特别是创建表结构和修改表结构，不同类型应该如何传递字段值，数据库表数据CRUD；给前端生成一份接口调用指南（比
-  SchemaDesignAppService：增加添加字段、修改字段、删除字段、添加索引、删除索引接口。
+  【暂时不需要】SchemaDesignAppService：增加添加字段、修改字段、删除字段、添加索引、删除索引接口。
   工程结构调整
-  如更新表数据接口，通过什么接口获取表数据及主键，如何传递入参）
   大批量数据测试：CRUD、导入导出，支持的几种数据库类型都要测试下
-  RequireDatabaseTarget和RequireTableTarget校验代码，很多地方都有引用，可以封装
+  注释掉“删除数据库接口”
+
+总数使用 long；按业务需求选择接受弱一致、使用同一读事务/快照，或采用“多取一条”计算 HasNextPage 来避免总数查询。
+请分析当前16-DbAdmin模块的代码，
+ 【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，目前接口开发已经基本完成，请仔细检查并补齐DbAdmin模块的单元测试
+【重复项，不处理】RequireDatabaseTarget和RequireTableTarget校验代码，很多地方都有引用，可以封装
+【已完成】 TableDataAppService中的GetPrimaryKeyColumnsAsync   GetAllowedColumnsAsync等方法是否可以抽取出来放到公共类中？让DbAdmin各服务或者组件类调用?如果可行，请先收集DbAdmin各接口类中可抽取到公共实现的方法，再统一处理。
+【已完成】 D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码（目前还在开发阶段，前端还未接入），请仔细检查TableDataAppService中的查询方法还有没有可优化的地方，我发现拼接此方法生成的SQL分页查询和过滤条件的用的都是公共逻辑，都调用了DbAdmin.Infrastructure.Dialects.Common.DbTableQueryCommandBuilder.Build方法。本次请不要改代码，仅输出优化建议即可
+【已完成】 请仔细检查TableDataAppService中的查询方法还有没有可优化的地方，我发现拼接此方法生成的SQL分页查询和过滤条件的用的都是公共逻辑，如何能保证各方言都能正常执行SQL？再参考上一轮对TableDataAppService中的添加方法生成SQL及参数的最新优化结果，仔细分析TableDataAppService的查询方法有没有可以优化的地方，请不要改代码，仅输出优化建议即可
+【已完成】刚刚针对IDbTableDataDialect的三个实现类的的改造，【BuildInsertCommand、BuildUpdateCommand、BuildDeleteCommand】这几个方法在不同方言的实现类中代码是不是完全一致？我突然想到一个办法，就是为IDbTableDataDialect建立一个抽象基类（或者接口的默认方法），把这些在方言中完成一致的方法都放在这个基类（或接口）中，这样方言类就不需要各自重复实现一遍了，你帮我评估一下哪种方式更好？或者你有没有更好的实现方案？
+【已完成】DbAdmin.Interface.Interface.DbDialect.IDbTableDataDialect中的BuildInsertCommand、BuildUpdateCommand、BuildDeleteCommand这三个方法不同方言的逻辑基本一致，BuildInsertSql、BuildUpdateSql、BuildDeleteSql在不同方言中也是调用同样的逻辑，感觉有些乱，有没有更好的实现方案？比如把这些逻辑都放到数据库方言各自的实现类中。
+【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码（目前还在开发阶段，前端还未接入），TableDataAppService中的接口，以添加接口为例，目前是通过BuildInsertSql和BuildInsertParameters分别生成SQL及参数，然后再传给_dbCommandExecutor.ExecuteNonQueryAsync统一执行，有没有更好的实现方式，比如把BuildInsertSql和BuildInsertParameters合为一步，直接把相关参数传给具体的方言数据库，让不同的方言数据库实现各自的逻辑。
+  【已完成】DbAdmin中,TableDataAppService的功能，发现部份SQL没有写到具体的方言数据库中，请检查并优化代码
+ 【已完成】 DbAdmin中,TableDataAppService负责对表数据的增删改查操作，目前使用的是各方言数据库通过原生SQL实现，由于当前DbAdmin是比较轻量的数据库管理工具，从长远角度来看，是否将TableDataAppService的增删改查操作改成使用SqlSugar实现会更好？我的想法是将这些操作放在基类中，如果将来SqlSugar对新增的数据库不支持的时候仍然可以在方言类中覆盖基类实现。你帮我评估下这样做是否比目前已有的方案更好？【评估后：不建议】
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，请仔细评估DbAdmin这个模块的“数据库连接”是否能正常使用，是否存在性能BUG，是否与当前项目的其他模块的数据库  连接存在冲突等问题
+   【完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，1.目前该模块操作数据接口接收请求体中的 `Target.Database`不能为空，需要改为可以为空，如果用户不传DataBase则用默认数据库，如果用户指定了DataBase则使用用户指定的DataBase；2.用户指定了DataBase后，当前模块底层切换数据库的功能需要你仔细检查下，如果不正常则请你进行修复。
+   【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，该模块第一版代码已开发完成，接下来需要交给前端对接，等对接完成并测试通过后就会发布生产，请为该模块的核心功能补齐单元测试并验证功能是否正常，如有问题请修复
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，该模块第一版代码已开发完成，接下来需要交给前端对接，等对接完成并测试通过后就会发布生产，请仔细分析该模块代码在发布生产前还有哪些P0问题必须解决，其中接口权限控制暂时不用管，最终请输出需要解决的问题清单及解决方案，以markdown格式输出到当前目录。【注：目前已有的“DbAdmin 生产发布前 P0 问题清单”中的第4个问题我已经处理过，第1个、第2个和第3个问题目前暂时不需要处理】
+  【】即使接口中传了数据库也没有用，只能修改数据源配置中的指定数据库，需要改掉这个限制
+  【已完成】D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理工具模块的代码，sqlConsoleAppServie中的ExecuteAsync接口，既保存了DbSqlHistory又保存了DbOperationLog，我觉得有些冗余，请去掉DbSqlHistory的保存功能，“分页查询 SQL 执行历史”接口也不需要了
   【不处理，先回退数据库切换功能，目前先支持现有数据源】DbAdmin模块的“数据库连接及数据源切换功能”，与当前项目其他模块的“数据库连接及数据源切换”是否会存在冲突？请仔细检查，如存在问题请输出问题原因及解决办法，以防止发布生产后出现重大BUG。
   【不处理】添加和修改表结构：可以去掉索引，单独增加“添加索引接口”和“删除索引接口”
   工程结构调整，特别是原生批量导入（代码分散，回滚没有日志，其他日志，注释）
@@ -353,6 +373,7 @@ D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理�
   删除字段，丢失数据，修改主键
   导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
   sql控制台：执行风险SQL
+  所有接口都有DataBase参数：允许用户指定不同数据库
   
   
 
@@ -540,3 +561,43 @@ D:\code\iotplatformv5\02-应用模块\16-DbAdmin是新开发的数据库管理�
                     await metadataDialect.GetIndexesAsync(context, new DbObjectName(target.Database, target.Schema, originalTableName), cancellationToken),
                     await metadataDialect.GetTableConstraintsAsync(context, new DbObjectName(target.Database, target.Schema, originalTableName), cancellationToken))
                 : 
+
+中风险：每请求创建 SqlSugarClient 有对象初始化成本
+
+  当前实现：
+
+  D:/code/iotplatformv5/02-应用模块/16-DbAdmin/DbAdmin.Infrastructure/Connections/DbConnectionContextFactory.cs:46
+
+  这不会导致每次都新建物理 TCP 连接，因为底层 ADO.NET 通常按连接串复用连接池。但每次请求仍会产生：
+
+  - SqlSugarClient 和内部上下文对象分配。
+  - 连接串解析和配置初始化。
+  - 密码解密和连接串重建。
+  - 客户端释放开销。
+
+  对于数据库管理工具这种低频、人工操作型模块，通常可以接受；如果存在大量分页查询或 SQL 批量操作，则建议缓存“数据源 + 目标数据库”对应的连接配置/连接串，至少避免每次密码解密和连接串解析。
+
+
+3. 根据实际 QPS 决定是否缓存连接串/连接配置；普通管理操作暂时不需要引入复杂的单例 Scope 注册表。
+  4. 增加并发验证：同时请求默认库、数据库 A、数据库 B，确认查询结果和客户端连接串始终对应各自目标。【是否存在这个问题？】
+     1. 严重：SQL 控制台必然空引用，无法执行 SQL。
+     /D:/code/iotplatformv5/02-应用模块/16-DbAdmin/DbAdmin.Service/SqlConsoleAppService.cs:45 声明了 _connectionOptions，但构造函数没有注入或赋值；ExecuteAsync 会直接访问其
+     Value.EnableConsoleSql。构建已产生 CS0649 和 CS8618 警告。/db-admin/sql/execute 会失败。
+
+  2. 高：PostgreSQL 驱动版本在宿主中不一致。
+     DbAdmin 固定引用 /D:/code/iotplatformv5/02-应用模块/16-DbAdmin/DbAdmin.Infrastructure/DbAdmin.Infrastructure.csproj:18，但宿主依赖链同时引入 /D:/code/iotplatformv5/02-应用模块/03-
+     BusApp/IotPlatform.Application/IotPlatform.Application.csproj:40，最终 IotPlatform 输出的是 Npgsql 9.0.3。这可能导致 PostgreSQL/Kingbase 的 SqlSugar 与原生批量导入代码在运行时出现 API
+     或行为不兼容，应统一版本并做真实连接、查询、导入回归测试。
+
+  3. 中：DbAdmin 自建的 dbadmin:source:{id} 缓存无法被现有数据连接管理服务失效。
+     连接工厂缓存数据源 5 分钟，/D:/code/iotplatformv5/02-应用模块/16-DbAdmin/DbAdmin.Infrastructure/Connections/DbConnectionContextFactory.cs:64；旧模块更新连接时只清理
+     CacheConst.KeyDbLink，/D:/code/iotplatformv5/02-应用模块/02-System/Systems.Core/System/DbLink/DbLinkService.cs:273。更新密码、地址、数据库名或删除连接后，DbAdmin 最多 5 分钟仍会使用旧
+     凭据或已删除的数据源。
+
+  4. 中：查询行数限制发生在结果完全加载后。
+     /D:/code/iotplatformv5/02-应用模块/16-DbAdmin/DbAdmin.Infrastructure/Execution/SqlSugarDbCommandExecutor.cs:122 先 GetDataTableAsync，随后才判断最大行数。面对无分页的大表元数据或误用
+     接口，内存、网络和数据库负载已发生，MaxResultRows 不能形成有效保护。
+
+     DbAdmin 操作的是任意用户表，没有静态实体。SqlSugar 动态 Dictionary<string, object?> 的插入/更新需要处理表别名、主键条件、空值、枚举/JSON/二进制/日期类型、标识列等，实际会形成另一套更难验证的适配逻辑。
+
+
