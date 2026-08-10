@@ -237,11 +237,10 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
 
 2026.8.7
 本周工作：
-  1.完成DbAdmin的开发及所有接口的基本功能测试，可以交给前端对接；目前仅测试PostgreSql，后端还需详细测试MySql、复杂接口、性能等，
+  1.完成DbAdmin的开发及所有接口的基本功能测试，可以交给前端对接；目前仅测试PostgreSql，后端还需详细测试复杂接口的各种特殊情况、性能、MySql等，
   2.解决实施反馈的【计算公式】类型字段保存时报错问题，column is of type numeric but expression is of type text
 下周计划：
   详细测试MySql和复杂接口的各种特殊情况，如表结构修改时将字符串转成int、导入数据需要测试不同的数据类型和导入模式、查询数据需要验证不同操作符、大数据量导入导出性能等
-  接口文档
   底层数据库方言源码
 
 
@@ -268,18 +267,46 @@ AI自我优化，代码审查
 【已解决】索引类型字段多余
 【已解决】新增表结构没有保存表注释及标签
 【已解决】更新表结构接口缺少标签修改能力。
-表结构更改：将varchar字段类型改为bigint时报错，"ErrorMessage": "42804: column \"name22\" cannot be cast automatically to type bigint"，其他类型没测试
 【已解决】生成数据表 SQL 模板：返回的SQL包含转义以及/n/r换行符，select语句没有限制返回行数
 【已解决】数据库审计日志：目前记录的SQL缺少参数值，例delete from "t_db_test_student" where "id" = @p0
-
-表结构创建和修改接口：需要详细测试不同的数据类型，添加、修改、删除字段，添加删除索引
-数据表查询接口：按主键查询已经测试通过，其他查询条件未测试
-导入功能
-表数据表导出
-根据SQL导出表数据（SQL控制台）
+【已解决】数据表查询接口：按主键查询已经测试通过，其他查询条件未测试
+【已解决】查询表数据：各种运算符测试、各种数据类型测试、多条件（0表示and，1表示or）
+【已解决】多主键删除测试
+【已解决】多主键更新测试
+【已解决】TableDataAppService删除数据接口，没有按主键批量删除，请修改代码实现
+【已解决】更新表结构接口：将varchar字段类型改为bigint时报错，"ErrorMessage": "42804: column \"name22\" cannot be cast automatically to type bigint"，这张表中目前没有数据不应该报这个错误，需要排查原因并修复，考虑其他数据类型转换是否存在同样的问题
+【已解决】如果表中有数据，在数据类型能安全转换的情况下应自动转换，比如数值型转成字符串，在数据类型能安全转换但是转换后会导致存储容量不足时会报错，比如bigint转换成int，decimal(18,2)转换成decimal(10,2)。【注：小数点四位改成小数点两位会造成小数点数据丢失，测试了下navicat也有同样问题，暂不处理】
+【已解决】表结构创建和修改接口：需要详细测试不同的数据类型，添加、修改、删除字段，添加删除索引
+【已解决】表结构：多主键
+【已解决】表结构：创建表默认值，【创创建PostgreSql表结构，在参数中指定了默认值，但是接口创建表后发现默认值没有设置成功 ，请排查原因并修复，修改表结构接口也存在同样的问题】
+【已解决】表结构：修改表设置默认值，删除默认值
+【已解决】表结构：新增表结构和修改表结构接口，需要将执行过的SQL语句记录进log日志和审计日志中，目前添加表和修改表接口仅记录一条审计日志，需要改成执行一条SQL就记录一条审计日志，如果失败也应记录失败日志。
+【已解决】表结构：不支持通过字段属性变更主键成员：id22？？？
+【已解决】表结构修改接口，1.不支持修改主键字段的自增或 Identity 属性；2."MySQL 自增主键字段不支持在本接口中修改、删除或扩展，请使用专项迁移方案处理；3.MySQL 不支持在本接口中新增自增主键字段，请使用专项迁移方案处理。请问这三条能不能都改成支持？
+【已解决】表模板Sql
+【已解决】查询数据表 DDL，换行符统一为\n，sql.Replace("\r\n", "\n");
+【已解决】数据表导出接口：根据条件导出数据，清理过期临时文件
+【已解决】数据表导入接口：导入数据，清理过期临时文件，“\\N”表示null
+【已解决】根据SQL导出表数据（SQL控制台）
 【已解决】SQL控制台：执行SQL查询，返回的结果rows和ResultSets两份数据重复了，是不是应该去掉其中一份？
-SQL控制台：执行SQL查询，没有按指定的pageSize进行分页
-
+【已解决】DbAdmin.Service.SqlConsoleAppService.ExecuteAsync接口的返回结果，如下这几个字段返回值不准确
+        "HasExactTotal": false,
+        "IsTruncated": false,
+        "HasNextPage": false,
+        "HasPrevPage": false，这几个字段感觉没什么作用，可以去掉
+【已解决】SqlConsoleAppService的预检查SQL接口，SQL语法错误仍返回成功，感觉不太合理，请问能否进行优化
+【已解决】SQL控制台：返回多数据集
+SQL控制台：返回值去掉不需要的字段。        "IsSafe": true,
+        "IsSyntaxValidated": true,
+        "IsDangerous": false,
+        "BlockedKeywords": [],
+        "IsMultiStatement": false,
+        "IsCrossDatabase": false,
+        "ErrorMessage": null
+【已解决】实体表数据测试
+【已解决】已解决Mysql数据库测试
+性能测试
+大数据量原子导入和部份成功导入测试
 
 
 ## 在正式开始测试之前：
@@ -299,7 +326,7 @@ SQL控制台：执行SQL查询，没有按指定的pageSize进行分页
   8.大批量数据导入导出时，增加警告提示：尽量在空闲时间执行，比如10万以上
   9.Sql控制台执行支持一请求包含多条 SQL（例如 SELECT; UPDATE），并按顺序实际执行
 ### 风险
-  删除字段，丢失数据，修改主键
+  删除字段，丢失数据，修改主键，删除字段会引起数据丢失
   导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
   sql控制台：执行风险SQL
   所有接口都有DataBase参数：允许用户指定不同数据库
@@ -400,9 +427,9 @@ DbTableTarget已经有SourceId和Database  ，为什么还要继承 IDbOperation
   【已完成】创建表结构和修改表结构：当前的字段默认值是否已达到上线使用的标准，有没有优化空间？比如目前支持的默认值函数是否完整等等，请帮我补齐相关代码逻辑】
   【已完成】全面检查和分析“创建表结构接口”和“修改表结构接口”，判断是否已经达到生产环境可用的标准，如有优化空间或更好的解决方案，请帮我优化相关代码逻辑
   【已完成】DbAdmin.Service中的Internal中的类是否放在DbAdmin.Infrastructure中更合适？
-  【】在SchemaDesignAppService中新增一个实体类列表分页查询接口，具体查询逻辑在DbEntityManageSyncService中实现（该类需要增加实体类列表分页查询接口（参数：表名、configId），同时请看下是否需要取一个更合适的类名称），可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中的方法实现
-  【】在SchemaDesignAppService中新增一个实体类详情查询接口，具体查询逻辑在DbEntityManageSyncService中实现，可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.GetInfo实现。
-  【】分析MetadataAppService中的接口代码，判断是否已经达到生产环境可用的标准，如有优化空间或更好的解决方案，请帮我优化相关代码逻辑
+  【已完成】在SchemaDesignAppService中新增一个实体类列表分页查询接口，具体查询逻辑在DbEntityManageSyncService中实现（该类需要增加实体类列表分页查询接口（参数：表名、configId），同时请看下是否需要取一个更合适的类名称），可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.DbEntityManagePage中的方法实现
+  【已完成】在SchemaDesignAppService中新增一个实体类详情查询接口，具体查询逻辑在DbEntityManageSyncService中实现，可参照IotPlatform.DataWeaving.Servers.DbEntityManageService.GetInfo实现。
+  【已完成】分析MetadataAppService中的接口代码，判断是否已经达到生产环境可用的标准，如有优化空间或更好的解决方案，请帮我优化相关代码逻辑
 
   
 
