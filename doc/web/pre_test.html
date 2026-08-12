@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script>
+function validateForm() {
+	var myVariable = "CREATE TABLE `test002` (\n  `id` int NOT NULL COMMENT 'id',\n  `name` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '姓名',\n  `age` int DEFAULT NULL COMMENT '年龄',\n  PRIMARY KEY (`id`)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='测试表2'";
+	document.getElementById("code-block").textContent = myVariable;
+    var x = document.forms["myForm"]["fname"].value;
+    if (x == null || x == "") {
+        //alert("需要输入名字。");
+        return false;
+    }
+}
+	
+
+</script>
+</head>
+<body >
+ 
+<form name="myForm" action="demo_form.php" onload = "return validateForm()"
+onsubmit="return validateForm()" method="post">
+名字: <input type="text" name="fname">
+<input type="submit" value="提交">
+	<pre id="code-block">
+	aaaa
+	</pre>
+</form>
+
+</body>
+</html>

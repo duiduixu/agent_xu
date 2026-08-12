@@ -1,4 +1,114 @@
 
+## 现有接口
+### 表单设计 
+    获取表字段信息：/table/{linkId}/Table/{tableName}
+    添加字段：/table/{linkId}/addFields
+    添加表单：不创建表，仅生成VisualDevEntity
+    发布表单：会在无表转有表时自动创建表
+
+### 优化方向：
+  1.大数据量建议增加游标分页，50至500万条数据建议使用游标分页，大于500万条数据强制使用游标分页
+  2.DbAdmin引用了DataWeaving中的DbEntityManage实体
+  3.DbAdmin相关接口暂不兼容现有前端，前端需要重新对接，创建表、更新表、查询字段列表等接口的字段属性名称，最好能和原来一致或者接近
+  4.数据库表导入导出：最大导出 50,000 行，最大导入100,000。导入文件不能超过 50 MB。导出大量数据时，如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
+  5.控制台SQL执行权限及限制？
+  6.导出EXCEL：确保所有类型数据都能正常显示，二进制字段如何处理？
+  7.导入模式：清空表后导入的安全性问题
+  8.大批量数据导入导出时，增加警告提示：尽量在空闲时间执行，比如10万以上
+  9.Sql控制台执行支持一请求包含多条 SQL（例如 SELECT; UPDATE），并按顺序实际执行
+  10.stream.GetReader(useHeaderRow: true);会有额外成本
+### 风险
+  删除字段，丢失数据，修改主键，删除字段会引起数据丢失
+  导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
+  sql控制台：执行风险SQL
+  所有接口都有DataBase参数：允许用户指定不同数据库
+  
+
+## 待完成任务：
+  D:\code\iotplatformv5\02-应用模块\16-DbAdmin是数据库管理工具模块的代码，请给前端生成一份接口调用指南，要求每个接口有调用示例，特别是创建表结构和修改表结构，比如不同字段类型应该如何传递字段值，不同数据类型的默认值如何指定等
+
+
+## 测试
+  varchar和text字段测试
+  字段长度、精度、小数位
+  默认值只支持 NULL、布尔值、数字、单引号字符串或受控时间函数：目前支持的函数包括"NULL", "TRUE", "FALSE", "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "CURRENT_DATE", "CURRENT_TIME", "NOW()"【新增表和修改表结构接口，检查下
+  【已处理】修改表结构：不支持在本接口中修改主键字段，不支持在本接口中删除主键字段,不支持通过新增字段创建主键成员
+  修改表结构：主键、外键约束、主键自增测试
+  导入导出接口性能测试
+
+
+【已解决】索引类型字段多余
+【已解决】新增表结构没有保存表注释及标签
+【已解决】更新表结构接口缺少标签修改能力。
+【已解决】生成数据表 SQL 模板：返回的SQL包含转义以及/n/r换行符，select语句没有限制返回行数
+【已解决】数据库审计日志：目前记录的SQL缺少参数值，例delete from "t_db_test_student" where "id" = @p0
+【已解决】数据表查询接口：按主键查询已经测试通过，其他查询条件未测试
+【已解决】查询表数据：各种运算符测试、各种数据类型测试、多条件（0表示and，1表示or）
+【已解决】多主键删除测试
+【已解决】多主键更新测试
+【已解决】TableDataAppService删除数据接口，没有按主键批量删除，请修改代码实现
+【已解决】更新表结构接口：将varchar字段类型改为bigint时报错，"ErrorMessage": "42804: column \"name22\" cannot be cast automatically to type bigint"，这张表中目前没有数据不应该报这个错误，需要排查原因并修复，考虑其他数据类型转换是否存在同样的问题
+【已解决】如果表中有数据，在数据类型能安全转换的情况下应自动转换，比如数值型转成字符串，在数据类型能安全转换但是转换后会导致存储容量不足时会报错，比如bigint转换成int，decimal(18,2)转换成decimal(10,2)。【注：小数点四位改成小数点两位会造成小数点数据丢失，测试了下navicat也有同样问题，暂不处理】
+【已解决】表结构创建和修改接口：需要详细测试不同的数据类型，添加、修改、删除字段，添加删除索引
+【已解决】表结构：多主键
+【已解决】表结构：创建表默认值，【创创建PostgreSql表结构，在参数中指定了默认值，但是接口创建表后发现默认值没有设置成功 ，请排查原因并修复，修改表结构接口也存在同样的问题】
+【已解决】表结构：修改表设置默认值，删除默认值
+【已解决】表结构：新增表结构和修改表结构接口，需要将执行过的SQL语句记录进log日志和审计日志中，目前添加表和修改表接口仅记录一条审计日志，需要改成执行一条SQL就记录一条审计日志，如果失败也应记录失败日志。
+【已解决】表结构：不支持通过字段属性变更主键成员：id22？？？
+【已解决】表结构修改接口，1.不支持修改主键字段的自增或 Identity 属性；2."MySQL 自增主键字段不支持在本接口中修改、删除或扩展，请使用专项迁移方案处理；3.MySQL 不支持在本接口中新增自增主键字段，请使用专项迁移方案处理。请问这三条能不能都改成支持？
+【已解决】表模板Sql
+【已解决】查询数据表 DDL，换行符统一为\n，sql.Replace("\r\n", "\n");
+【已解决】数据表导出接口：根据条件导出数据，清理过期临时文件
+【已解决】数据表导入接口：导入数据，清理过期临时文件，“\\N”表示null
+【已解决】根据SQL导出表数据（SQL控制台）
+【已解决】SQL控制台：执行SQL查询，返回的结果rows和ResultSets两份数据重复了，是不是应该去掉其中一份？
+【已解决】DbAdmin.Service.SqlConsoleAppService.ExecuteAsync接口的返回结果，如下这几个字段返回值不准确
+        "HasExactTotal": false,
+        "IsTruncated": false,
+        "HasNextPage": false,
+        "HasPrevPage": false，这几个字段感觉没什么作用，可以去掉
+【已解决】SqlConsoleAppService的预检查SQL接口，SQL语法错误仍返回成功，感觉不太合理，请问能否进行优化
+【已解决】SQL控制台：返回多数据集
+SQL控制台：返回值去掉不需要的字段。        "IsSafe": true,
+        "IsSyntaxValidated": true,
+        "IsDangerous": false,
+        "BlockedKeywords": [],
+        "IsMultiStatement": false,
+        "IsCrossDatabase": false,
+        "ErrorMessage": null
+【已解决】实体表数据测试
+【已解决】Mysql数据库测试 
+【已解决】大数据量原子导入和部份成功导入测试：
+    优化前：      MySql导入（AllOrNothing）：导入完成，SourceId=836365078479045, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=AllOrNothing, InsertedRows=1000000, SkippedRows=0, IssueCount=0, FileName=测试_大批量导入数据.xlsx, DurationMs=160609
+          MySql导入（BestEffort）：导入完成，SourceId=836365078479045, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=BestEffort, InsertedRows=1000000, SkippedRows=0, IssueCount=0, FileName=测试_大批量导入数据.xlsx, DurationMs=155948
+          PostgreSql导入（AllOrNothing）：导入数据表完成，SourceId=835213193781445, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=AllOrNothing, InsertedRows=1000000, SkippedRows=0, IssueCount=0, FileName=t_db_test_student.xlsx, DurationMs=161616
+          PostgreSql导入（BestEffort）：导入数据表完成，SourceId=835213193781445, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=BestEffort, InsertedRows=999999, SkippedRows=1, IssueCount=1, FileName=t_db_test_student.xlsx, DurationMs=360469
+          MySql：导出完成，SourceId=836365078479045, Table=t_db_test_student, FileType=Xlsx, ExportedRows=1000000, DurationMs=252411
+          PostgreSql：表导出完成，SourceId=835213193781445, Table=t_db_test_student, FileType=Xlsx, ExportedRows=999999, DurationMs=219302
+    优化后(csv导入)： PostgreSql（BestEffort）  导入数据表完成，SourceId=835213193781445, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=BestEffort, InsertedRows=1000000, SkippedRows=0, IssueCount=0, FileName=t_db_test_student.csv, (csv文件导入)DurationMs=79319【xlsx文件 DurationMs是225575】
+    优化后(csv导入)： MySql（BestEffort）  导入数据表完成，SourceId=836365078479045, Table=t_db_test_student, ImportMode=InsertDataOnly, ImportPolicy=BestEffort, InsertedRows=1000000, SkippedRows=0, IssueCount=0, FileName=t_db_test_student - 副本.csv, DurationMs=97956【xlsx文件 DurationMs是157348】
+    Navicat导入（XSLX文件）：100万行数据实测耗时约04:20.48，该时间不包含文件上传时间，【，[IMP] Processed: 1000000, Added: 1000000, Updated: 0, Deleted: 0, Errors: 0】
+    Navicat导入（CSV文件）：100万行数据实测耗时约07:33.83，该时间不包含文件上传时间
+    Navicat导出（CSV文件）：100万行数据实测耗时约03:37.77
+    Navicat导出（XSLX文件）：100万行数据实测耗时约03:42.90
+
+【已解决】导入功能需要记录批次日志
+
+DbAdmin接口已测试完成，目前仅测试了Mysql库和PostgreSql库，其他库暂不支持；
+大批量数据方面，造了100万行测试数据（8个字段），测试了两种库的导入导出，导入100d万数据，Mysql大概在160多秒左右，PostgreSql有时候160多秒有时候360多秒（CSV格式最快104秒）。导出100万数据，MySql和PostgreSql导出EXCEL需要4分钟左右。
+代码里目前先限制导入导出最多只能200万行，导入文件限制200M，够吗？
+
+数据库管理工具：
+1.表数据导入功能已完成优化，优化后百万数据导入PostgreSql用时(xlsx文件225秒，csv文件79秒）, 百万数据导入Mysql用时（xlsx文件157秒，csv文件97秒）；通过Navacat将百万数据导入Mysql用时（xlsx文件260秒，csv文件秒）
+2.目前表数据导出用时与Navicat差不多，暂不优化
+
+## 在正式开始测试之前：
+  处理GlobalUsing，单元测试->让AI只看接口定义设计单元测试，测试所有可能的应用场景
+  检查关键步骤日志是否完善，关键步骤异常处理是否完完善，异常日志是否完善
+  检查并完善注释，swagger分组及注释，英文注释改成中文注释
+  
+
+
 02-应用模块/05-DbAdmin/
 
 web版数据库管理工具，目前支持的常用功能：
@@ -224,126 +334,20 @@ SQL控制台服务SqlConsoleAppService：SQL查询和SQL执行是否需要分开
 审计日志优化：记录所有SQL
 
 
-2026.7.31
-本周工作：
-  排产算法优化：（1）指定模具不会被排到不配对设备 （2）处理动态作业与固定作业之间的过渡关系，确保它们在同一机器上时满足换模准备时间约束。
-  DbAdmin开发：完成工程结构调整、表结构设计服务、元数据查询服务、表数据服务，表数据导入导出服务相关接口功能，完成这些接口功能的代码分析、代码逻辑优化、风险排查、性能排查、复用并重构通用逻辑、审计日志等。大致看了下由AI生成底层数据库方言源码，后期还需要详细阅读和分析。其中"数据导入导出服务"完成70%左右。
-下周计划：
-  SQL控制台服务相关接口
-  完善导入导出接口性能排查、优化、临时文件
-  其他接口：创建数据库、生成表模板SQL、实体管理页面相关接口、结合前端功能页面排查缺少的接口并补全
-  接口分类及代码结构调整，完善注释、swagger注释、log日志、error日志、审计日志
-  测试
-
-2026.8.7
-本周工作：
-  1.完成DbAdmin的开发及所有接口的基本功能测试，可以交给前端对接；目前仅测试PostgreSql，后端还需详细测试复杂接口的各种特殊情况、性能、MySql等，
-  2.解决实施反馈的【计算公式】类型字段保存时报错问题，column is of type numeric but expression is of type text
-下周计划：
-  详细测试MySql和复杂接口的各种特殊情况，如表结构修改时将字符串转成int、导入数据需要测试不同的数据类型和导入模式、查询数据需要验证不同操作符、大数据量导入导出性能等
-  底层数据库方言源码
 
 
 AI自我优化，代码审查
 
-## 现有接口
-### 表单设计 
-    获取表字段信息：/table/{linkId}/Table/{tableName}
-    添加字段：/table/{linkId}/addFields
-    添加表单：不创建表，仅生成VisualDevEntity
-    发布表单：会在无表转有表时自动创建表
 
-
-
-## 测试
-  varchar和text字段测试
-  字段长度、精度、小数位
-  默认值只支持 NULL、布尔值、数字、单引号字符串或受控时间函数：目前支持的函数包括"NULL", "TRUE", "FALSE", "CURRENT_TIMESTAMP", "CURRENT_TIMESTAMP()", "CURRENT_DATE", "CURRENT_TIME", "NOW()"【新增表和修改表结构接口，检查下
-  【已处理】修改表结构：不支持在本接口中修改主键字段，不支持在本接口中删除主键字段,不支持通过新增字段创建主键成员
-  修改表结构：主键、外键约束、主键自增测试
-  导入导出接口性能测试
-
-
-【已解决】索引类型字段多余
-【已解决】新增表结构没有保存表注释及标签
-【已解决】更新表结构接口缺少标签修改能力。
-【已解决】生成数据表 SQL 模板：返回的SQL包含转义以及/n/r换行符，select语句没有限制返回行数
-【已解决】数据库审计日志：目前记录的SQL缺少参数值，例delete from "t_db_test_student" where "id" = @p0
-【已解决】数据表查询接口：按主键查询已经测试通过，其他查询条件未测试
-【已解决】查询表数据：各种运算符测试、各种数据类型测试、多条件（0表示and，1表示or）
-【已解决】多主键删除测试
-【已解决】多主键更新测试
-【已解决】TableDataAppService删除数据接口，没有按主键批量删除，请修改代码实现
-【已解决】更新表结构接口：将varchar字段类型改为bigint时报错，"ErrorMessage": "42804: column \"name22\" cannot be cast automatically to type bigint"，这张表中目前没有数据不应该报这个错误，需要排查原因并修复，考虑其他数据类型转换是否存在同样的问题
-【已解决】如果表中有数据，在数据类型能安全转换的情况下应自动转换，比如数值型转成字符串，在数据类型能安全转换但是转换后会导致存储容量不足时会报错，比如bigint转换成int，decimal(18,2)转换成decimal(10,2)。【注：小数点四位改成小数点两位会造成小数点数据丢失，测试了下navicat也有同样问题，暂不处理】
-【已解决】表结构创建和修改接口：需要详细测试不同的数据类型，添加、修改、删除字段，添加删除索引
-【已解决】表结构：多主键
-【已解决】表结构：创建表默认值，【创创建PostgreSql表结构，在参数中指定了默认值，但是接口创建表后发现默认值没有设置成功 ，请排查原因并修复，修改表结构接口也存在同样的问题】
-【已解决】表结构：修改表设置默认值，删除默认值
-【已解决】表结构：新增表结构和修改表结构接口，需要将执行过的SQL语句记录进log日志和审计日志中，目前添加表和修改表接口仅记录一条审计日志，需要改成执行一条SQL就记录一条审计日志，如果失败也应记录失败日志。
-【已解决】表结构：不支持通过字段属性变更主键成员：id22？？？
-【已解决】表结构修改接口，1.不支持修改主键字段的自增或 Identity 属性；2."MySQL 自增主键字段不支持在本接口中修改、删除或扩展，请使用专项迁移方案处理；3.MySQL 不支持在本接口中新增自增主键字段，请使用专项迁移方案处理。请问这三条能不能都改成支持？
-【已解决】表模板Sql
-【已解决】查询数据表 DDL，换行符统一为\n，sql.Replace("\r\n", "\n");
-【已解决】数据表导出接口：根据条件导出数据，清理过期临时文件
-【已解决】数据表导入接口：导入数据，清理过期临时文件，“\\N”表示null
-【已解决】根据SQL导出表数据（SQL控制台）
-【已解决】SQL控制台：执行SQL查询，返回的结果rows和ResultSets两份数据重复了，是不是应该去掉其中一份？
-【已解决】DbAdmin.Service.SqlConsoleAppService.ExecuteAsync接口的返回结果，如下这几个字段返回值不准确
-        "HasExactTotal": false,
-        "IsTruncated": false,
-        "HasNextPage": false,
-        "HasPrevPage": false，这几个字段感觉没什么作用，可以去掉
-【已解决】SqlConsoleAppService的预检查SQL接口，SQL语法错误仍返回成功，感觉不太合理，请问能否进行优化
-【已解决】SQL控制台：返回多数据集
-SQL控制台：返回值去掉不需要的字段。        "IsSafe": true,
-        "IsSyntaxValidated": true,
-        "IsDangerous": false,
-        "BlockedKeywords": [],
-        "IsMultiStatement": false,
-        "IsCrossDatabase": false,
-        "ErrorMessage": null
-【已解决】实体表数据测试
-【已解决】已解决Mysql数据库测试
-性能测试
-大数据量原子导入和部份成功导入测试
-
-
-## 在正式开始测试之前：
-  处理GlobalUsing，单元测试->让AI只看接口定义设计单元测试，测试所有可能的应用场景
-  检查关键步骤日志是否完善，关键步骤异常处理是否完完善，异常日志是否完善
-  检查并完善注释，swagger分组及注释，英文注释改成中文注释
+ImportExportAppService的“导出数据表”接口，目前导出100万数据需要大概3到4分钟左右，请分析代码并提出优化建议
+ImportExportAppService的“导入数据表”接口代码，目前导入100万数据需要大概3到6分钟左右，请分析代码并优化
+D:\\code\\iotplatformv5\\02-应用模块\\16-DbAdmin是新开发的数据库管理工具模块的代码，目前接口开发已经基本完成，ImportExportAppService的“导入数据表”接口能否优化下性能，目前发现导入接口在PreflightAsync中从文件里读取了一遍数据，后面又再次从文件里读取一遍数据，这个地方应该可以优化，请分析并进行代码优化
+【采用智能双模式：严格模式继续保证完整预检与零写入失败语义；流式模式面向大文件，在一次读取中完成校验和分批写入，并明确报告部分提交。接下来需要锁定流式模式对 identity 列的处理，因为这是现有预检最关键、也最影响数据正确性的全量依赖。
+现在的全量导入模式的代码是先分批写入临时表，所以我认为全量导入也不需要预检，当中间或尾部数据导入失败时清空临时表即可
+暂存表没有合并到目标表前，尾部失败不会污染目标表，因此 AllOrNothing 可以避免为数据格式错误做一次完整预检。现有实现仍依赖预检的原因不在事务，而在开始暂存前
+  要确定 identity 写入策略和所有有效行是否使用同一列集合；我会核对暂存表的建表与合并细节，判断是否能改为安全的单次流式暂存。
   
-
-### 优化方向：
-  1.大数据量建议增加游标分页，50至500万条数据建议使用游标分页，大于500万条数据强制使用游标分页
-  2.DbAdmin引用了DataWeaving中的DbEntityManage实体
-  3.DbAdmin相关接口暂不兼容现有前端，前端需要重新对接，创建表、更新表、查询字段列表等接口的字段属性名称，最好能和原来一致或者接近
-  4.数据库表导入导出：最大导出 50,000 行，最大导入100,000。导入文件不能超过 50 MB。导出大量数据时，如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
-  5.控制台SQL执行权限及限制？
-  6.导出EXCEL：确保所有类型数据都能正常显示，二进制字段如何处理？
-  7.导入模式：清空表后导入的安全性问题
-  8.大批量数据导入导出时，增加警告提示：尽量在空闲时间执行，比如10万以上
-  9.Sql控制台执行支持一请求包含多条 SQL（例如 SELECT; UPDATE），并按顺序实际执行
-### 风险
-  删除字段，丢失数据，修改主键，删除字段会引起数据丢失
-  导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
-  sql控制台：执行风险SQL
-  所有接口都有DataBase参数：允许用户指定不同数据库
-  
-
-## 待完成任务：
-  给前端生成接口文档：特别是创建表结构和修改表结构，不同类型应该如何传递字段值，数据库表数据CRUD；给前端生成一份接口调用指南（比
-  【暂时不需要】SchemaDesignAppService：增加添加字段、修改字段、删除字段、添加索引、删除索引接口。
-  工程结构调整
-  大批量数据测试：CRUD、导入导出，支持的几种数据库类型都要测试下
-  注释掉“删除数据库接口”
-
-总数使用 long；按业务需求选择接受弱一致、使用同一读事务/快照，或采用“多取一条”计算 HasNextPage 来避免总数查询。
-
-
-DbTableTarget已经有SourceId和Database  ，为什么还要继承 IDbOperationTarget
-
+  】
 获取实体列表和详情，目前查的是数据库表为准，再加上实体表的标签，【旧逻辑也如此】
 独立的添加字段、添加索引接口【暂时不需要】
  【已完成】刚才修改的方案过于复杂，我已经把你改的代码去掉了，目前的数据库管理工具比较轻量，暂时不需要索引类型字段，我发现创建索引入参中的索引类型也没有使用，请帮我去掉创建索引入参中的索引类型字段
