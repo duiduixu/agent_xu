@@ -1,0 +1,5 @@
+
+
+JNPM工作流用的是开源flowable，该项目用java开发
+工作流需要独立的java服务
+IotPlatform
