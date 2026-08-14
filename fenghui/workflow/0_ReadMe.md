@@ -1,5 +1,11 @@
 
 
+流程设计
+流程绑定表单，表单属性
+
+复用现有的表单功能，单纯的将工作流引擎替换成dotnet开源项目
+
+
 JNPF工作流用的是开源flowable7.0.1，是用java开发的
 JNPF目前的架构，独立封装了基于Spring Boot的jnpf-workflow应用, .NET不直接使用Flowable
 
@@ -58,7 +64,8 @@ Java17/21+flowable7.0.1<
 该项目没有任何历史包袱，参考旧项目代码仅仅为了提高开发效率，所以无需考虑历史流程bpmn迁移以及历史数据迁移，本项目的定位是重新发开工作流前端和后端项目，本次无需进行代码实现，仅需生成详细的技术开发方案文档即可，要求技术方案中明确项目定位（不需要处理历史数据）、dotnet工作流引擎选型、工作流前端设计器选型等。
 
 
-在codex cli中执行开发任务的时候，经常询问我是否允许查看某某文件这些提示，感觉好麻烦，请帮我在当前项目生成常用的可自动执行的常规命令，不要每次都询问我
+
+在codex cli中执行开发任务的时候，经常询问我是否允许查看某某文件这些提示，感觉好麻烦，请帮我为当前项目生成一个配置，允许其生成常用的可自动执行的常规命令，不要每次都询问我
 
 本次仅做前端技术选型，不开发前端
 
@@ -73,3 +80,22 @@ Java17/21+flowable7.0.1<
 
 
 
+
+
+
+
+做新的 .NET 8/9 企业项目，优先级：
+1. Elsa Workflows       ⭐⭐⭐⭐⭐   适合普通.NET企业应用，例如：ERP、CRM、OA、SAAS，推荐Elsa
+2. Camunda              ⭐⭐⭐⭐☆  Camunda 是企业 BPM 领域非常强的方案。适合大型企业流程中心，需要维护java应用
+3. WorkflowEngine.NET   ⭐⭐⭐⭐  传统审批系统迁移，老牌的.NET工作流产品。企业审批能力强，成熟稳定，net支持好。社区活跃度不如Elsa，技术偏传统、部分高级功能商业版
+4. Workflow Core        ⭐⭐⭐☆  适合仅仅后台流程编排
+5. Stickflow            ⭐⭐   
+目前新项目中，Elsa 是 .NET 生态里最均衡的选择；如果目标是建设企业级 BPM 平台，如果允许引入 Java/独立流程服务，则 Camunda 更适合长期治理。
+
+ 
+本dotnet项目中已经开发过工作流，但该dotnet项目使用了java的工作流引擎flowable7，工作流后端dotnet代码在D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable，工作流后端dotnet通过API调用java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable，该java应用引用了D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable），工作流前端项目代码在D:\code\jnpf6.2.x\jnpf-bpmn-  v6.2.x-v1.2.x-stable。
+  接下来公司希望统一使用dotnet技术栈，想把flowable7替换成Elsa workflow，请评估并列出哪些地方需要修改？因为已有的工作流模块还没有正式上线，所以无需考虑历史数据和历史流程。因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其直接作为独立的模块集成到主dotnet项目中（必须是独立模块，未来可能会拆分为独立的服务），本次不需要修改代码，仅需告诉我有哪些地方工改即可
+
+  流程定义发布：转换并发布 Elsa Workflow Definition。现有的流程定义都能转换成Elsa吗？
+
+  彻底重写还是适配Elsa
