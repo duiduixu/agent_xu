@@ -1,0 +1,268 @@
+  # Flowable 7 替换为 Elsa Workflow 的修改评估
+
+  ## 总结
+
+  当前系统的工作流不是简单调用 Flowable，而是由三部分组成：
+
+  1. .NET 工作流业务层：保存 JNPF 的流程模板、版本、任务、操作人、审批记录、候选人、委托、触发器等数据。
+  2. Java Flowable 适配服务：由 jnpf-workflow 和 jnpf-workflow-core 提供流程定义、实例、节点、历史、跳转等 API。
+  3. 前端 BPMN 设计器：基于 bpmn-js，扩展了大量 JNPF 节点、属性和节点 JSON 配置。
+
+  建议采用 Elsa 3.x 作为运行时，并将 Java 工作流服务整体移除。保留现有 JNPF 工作流业务 API 和业务表语义，在 .NET 内新增 Elsa 适配层。
+
+  ## 需要修改的部分
+
+  ### 1. 移除 Java Flowable 服务
+
+  以下工程不再参与部署和运行：
+
+  - jnpf-workflow-v6.2.x-stable
+  - jnpf-workflow-core-v6.2.x-stable
+  - Java 工程中的 Flowable 依赖、Spring Boot 配置、Flowable 数据源和 Flowable 数据库表
+
+  同时移除：
+
+  - Java 工作流服务部署包和 Docker 配置
+  - .NET -> Java 工作流服务的网络地址、健康检查和运维配置
+  - Flowable 数据库初始化脚本及 ACT_* 表
+
+  因为没有历史流程要求，可以直接初始化 Elsa 数据库，不需要做 Flowable 数据迁移。
+
+  ### 2. 重构 .NET 引擎适配层
+
+  当前主要耦合点包括：
+
+  - JNPF.WorkFlow.Interfaces/Manager/IBpmnEngine.cs
+  - JNPF.WorkFlow/Factory/FlowableUtil.cs
+  - JNPF.WorkFlow/Factory/BpmnEngineFactory.cs
+  - JNPF.WorkFlow.Entitys/Dto/Flowable/*
+
+  当前 IBpmnEngine 暴露了部署、启动、删除、当前节点、前后节点、完成、退回、撤回、跳转、补偿、历史等 18 类 Flowable 行为。
+
+  需要：
+
+  - 将 FlowableUtil 替换为 ElsaWorkflowEngine 或类似的 Elsa 实现。
+  - 将 Flowable*Request/Response DTO 改为 Elsa DTO，或改为平台无关的工作流 DTO。
+  - 保留 IBpmnEngine 也可以，但建议重命名为 IWorkflowEngine，避免业务层继续依赖 Flowable 概念。
+  - BpmnEngineFactory 改为通过依赖注入注册 Elsa 引擎，不再 new FlowableUtil()。
+  - 所有 WorkFlowManager、WorkFlowNodeUtil、WorkFlowOtherUtil、触发器服务中调用 Flowable 的地方，改为调用新的引擎接口。
+
+  需要特别处理的运行时能力：
+
+  - 流程定义发布：转换并发布 Elsa Workflow Definition。
+  - 流程启动：使用 Elsa Workflow Instance/Workflow Starter。
+  - 待办任务：使用 Elsa Activity Bookmark 或自定义人工审批 Activity。
+  - 节点完成：完成 Bookmark，并传递审批变量。
+  - 当前节点和历史节点：从 Elsa 实例、Bookmark、执行日志中组装为现有 JNPF 返回模型。
+  - 撤回、退回、跳转、补偿：不能直接假设 Elsa 与 Flowable 行为一致，需要通过 Elsa 自定义管理服务实现。
+  - 多人会签、加签、委托、候选人、抄送：需要由 JNPF 业务层和自定义 Elsa Activity 共同实现。
+  - 暂停、恢复、取消、超时、定时触发：映射到 Elsa 的 Suspend/Resume/Cancel、Timer、Bookmark 和调度机制。
+
+  其中“任意节点跳转、退回、补偿”是替换中风险最高的部分，不能只依赖 Elsa 标准 API。
+
+  ### 3. 修改流程实体和数据库字段
+
+  当前实体仍直接使用 Flowable 命名，例如：
+
+  - WorkFlowVersionEntity.FlowableId
+  - WorkFlowTemplateEntity.FlowableId
+  - WorkFlowTaskEntity.InstanceId
+  - 多个实体中的 TaskId、NodeId
+
+  建议：
+
+  - FlowableId 改为 EngineDefinitionId 或 ElsaDefinitionId。
+  - 明确区分：
+      - Elsa Workflow Definition ID/Version ID
+      - Elsa Workflow Instance ID
+      - Elsa Bookmark ID
+      - JNPF 业务任务 ID
+      - JNPF 节点 ID
+
+  - 对任务、操作人、记录、候选人、触发器等表增加或明确引擎实例映射字段。
+  - 保留 JNPF 自有业务任务表，不要直接用 Elsa 的运行时表替代，因为 JNPF 还需要审批意见、签名、撤回、委托、抄送、业务单据关联等平台数据。
+  - 建立 JNPF 状态与 Elsa 实例状态的映射，例如运行中、暂停、完成、拒绝、撤回、取消、异常。
+  - 重新生成数据库结构或执行全新初始化脚本；不需要兼容旧 Flowable 数据。
+
+  ### 4. 引入 Elsa 依赖和运行时基础设施
+
+  在工作流 .csproj 中增加 Elsa 相关包，至少包括：
+
+  - Elsa Workflows 核心
+  - Elsa Activities
+  - Elsa Persistence
+  - Elsa Server/API（如果采用 Elsa Server）
+  - Elsa Quartz 或其他调度组件
+  - JSON 序列化和表达式执行相关组件
+
+  当前工作流项目目标框架为 net6.0;net7.0;net8.0。应根据选定 Elsa 版本统一目标框架，建议统一到 .NET 8，然后评估是否删除 net6/net7 多目标编译。
+
+  需要新增：
+
+  - Elsa 服务注册和启动配置
+  - Elsa 数据库连接配置
+  - 持久化表初始化
+  - 调度器、后台执行器、分布式锁配置
+  - 取消、重试、异常处理和超时策略
+  - 多租户、用户上下文、权限和审计集成
+  - Elsa 日志、执行记录和监控指标
+
+  ### 5. 修改配置
+
+  当前配置位置包括：
+
+  - src/application/JNPF.API.Entry/Configurations/App.json
+  - AppOptions.FlowableDomain
+  - JNPF.WorkFlow/Factory/FlowableUtil.cs
+
+  需要：
+
+  - 删除 FlowableDomain。
+  - 增加 Elsa 数据库、调度器、实例执行、API、租户和存储配置。
+  - 如果 Elsa 运行在同一个 API 进程中，删除工作流远程服务地址。
+  - 如果 Elsa 独立部署，则改为 .NET Elsa Server 地址，但不再保留 Java 服务。
+  - 更新 Docker、启动脚本、环境变量、健康检查和日志配置。
+
+  ### 6. 前端设计器需要重新确定流程定义格式
+
+  现有前端项目：
+
+  - jnpf-bpmn-v6.2.x-v1.2.x-stable
+
+  其核心依赖和耦合包括：
+
+  - bpmn-js
+  - camunda-bpmn-moddle
+  - JNPF 自定义节点和 Renderer
+  - wnType
+  - jnpfData
+  - 节点 JSON
+  - Flowable 风格 BPMN XML
+  - 条件表达式和自定义扩展属性
+
+  Elsa 3 的工作流定义通常是 Elsa Workflow JSON/Activity Definition，并不是直接执行 Flowable BPMN XML。因此有两种方案：
+
+  #### 推荐方案：保留现有设计器，增加编译转换层
+
+  - 前端继续使用 bpmn-js 和现有 JNPF 节点体验。
+  - 将 BPMN XML 和 JNPF 节点 JSON 作为设计态数据。
+  - 后端新增 BPMN/JNPF 定义编译器，将其转换为 Elsa Workflow Definition。
+  - 编译器负责：
+      - 开始、结束、审批、条件、并行、汇聚、子流程、触发器、定时器转换
+      - 节点人员规则转换
+      - 条件表达式转换
+      - 表单和业务变量映射
+      - JNPF 自定义执行节点转换为 Elsa Custom Activity
+
+  - 保存原始设计图和 Elsa 编译结果，便于预览、版本管理和问题排查。
+
+  需要重新评估的前端文件范围：
+
+  - src/components/bpmn/src/index.vue
+  - lib/config/element/*
+  - lib/config/constants/*
+  - lib/modeler/*
+  - lib/*Modeler/*
+  - lib/utils/*
+  - camunda-bpmn-moddle 和相关扩展属性定义
+
+  #### 另一方案：改用 Elsa Studio
+
+  如果完全采用 Elsa Studio，则需要重做现有 JNPF 流程设计器、节点配置面板和业务表单集成，改动更大，且现有 JNPF 节点能力不能直接复用。
+
+  ### 7. JNPF 自定义节点需要实现 Elsa Activity
+
+  前端已有大量 Flowable/JNPF 专用节点，例如：
+
+  - 审批节点
+  - 经办节点
+  - 条件分支
+  - 并行/包容/排他网关
+  - 子流程
+  - 外部流程
+  - 数据新增、修改、删除、查询
+  - 接口调用
+  - 消息通知
+  - 发起流程
+  - 定时节点
+  - Webhook/事件触发
+  - 决策表、评分、复杂条件
+
+  这些节点不能仅通过 Elsa 内置 Activity 自动替代，需要：
+
+  - 为每类节点建立 Elsa Activity。
+  - 定义 Activity 输入、输出、变量和持久化状态。
+  - 为人工审批 Activity 实现 Bookmark。
+  - 为人员解析实现用户、部门、角色、岗位、发起人、主管等规则。
+  - 为会签、或签、加签、转办、委托、抄送实现业务 Activity 或业务服务。
+  - 为接口、消息、数据操作节点实现统一异常、重试、幂等和审计机制。
+  - 明确 Flowable 表达式 ${...} 与 Elsa 表达式语法的转换规则。
+
+  ### 8. .NET 业务流程管理逻辑需要重新验证
+
+  重点检查并改造：
+
+  - WorkFlowManager
+  - TemplateService
+  - TaskFlowEventSubscriber
+  - WebHookService
+  - WorkFlowAIService
+  - WorkFlowRepository
+  - 触发器、委托、撤回、拒绝、加签、转办、抄送相关服务
+  - VisualDev 生成的工作流表单和流程入口
+
+  需要确保：
+
+  - JNPF 业务任务创建与 Elsa 实例启动的事务边界明确。
+  - Elsa 启动失败时，JNPF 任务不会产生脏数据。
+  - Elsa 回调或后台执行重复时，业务操作具备幂等性。
+  - Elsa 的执行线程和 JNPF 当前用户上下文可以正确关联。
+  - 业务表单数据、审批变量、流程变量的类型和序列化格式统一。
+  - 流程完成、拒绝、撤回、异常时，JNPF 任务状态和通知状态同步更新。
+
+  ### 9. API 层建议保持平台契约不变
+
+  前端和业务模块尽量继续调用现有 JNPF API，避免把 Elsa 原生 API 暴露给所有业务代码。
+
+  新增或调整的 API 主要包括：
+
+  - 流程定义保存、编译、发布、撤销、删除
+  - 流程实例启动、查询、取消、暂停、恢复
+  - 待办任务查询和完成
+  - 历史轨迹查询
+  - 前后节点查询
+  - 退回、撤回、跳转、补偿
+  - 流程变量和审批意见处理
+  - Elsa 执行异常和重试查询
+
+  建议把 Elsa 原生 API 限制在工作流基础设施层，业务层继续使用 JNPF 语义。
+
+  ## 测试计划
+
+  至少覆盖以下场景：
+
+  - 简单开始-审批-结束流程
+  - 条件分支和默认分支
+  - 并行会签、或签、汇聚
+  - 多级人员解析、候选人和动态加签
+  - 转办、委托、抄送、撤回、退回
+  - 任意节点跳转和补偿
+  - 子流程和外部流程
+  - 定时器、超时、Webhook、消息触发
+  - 流程暂停、恢复、取消、异常重试
+  - 流程定义版本发布和实例使用旧版本
+  - API 超时、Elsa 重启、重复回调和幂等
+  - VisualDev 生成表单与工作流任务联动
+  - 多租户、权限、审计和通知
+  - 数据库支持的目标类型
+  - 前端 XML/节点 JSON 保存、重新加载、预览和发布编译
+
+  ## 明确假设
+
+  - 采用 Elsa 3.x，而不是 Elsa 2.x。
+  - 目标运行时统一到 .NET 8 或 Elsa 官方支持的单一版本。
+  - 不迁移 Flowable 历史实例、历史任务和旧流程定义。
+  - 保留 JNPF 现有工作流业务表和业务 API 语义。
+  - 保留现有 BPMN 前端交互体验，通过编译器生成 Elsa 定义。
+  - 不直接把 Flowable BPMN XML 当作 Elsa 可执行定义。
+  - 任意跳转、退回、补偿、会签等高级能力需要定制开发并单独验收。
