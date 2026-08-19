@@ -84,12 +84,12 @@ Java17/21+flowable7.0.1<
 
 
 
-做新的 .NET 8/9 企业项目，优先级：
+.NET 8/9 企业项目，优先级：
 1. Elsa Workflows       ⭐⭐⭐⭐⭐   适合普通.NET企业应用，例如：ERP、CRM、OA、SAAS，推荐Elsa
 2. Camunda              ⭐⭐⭐⭐☆  Camunda 是企业 BPM 领域非常强的方案。适合大型企业流程中心，需要维护java应用
 3. WorkflowEngine.NET   ⭐⭐⭐⭐  传统审批系统迁移，老牌的.NET工作流产品。企业审批能力强，成熟稳定，net支持好。社区活跃度不如Elsa，技术偏传统、部分高级功能商业版
 4. Workflow Core        ⭐⭐⭐☆  适合仅仅后台流程编排
-5. Stickflow            ⭐⭐   
+5. Slickflow            ⭐⭐   
 目前新项目中，Elsa 是 .NET 生态里最均衡的选择；如果目标是建设企业级 BPM 平台，如果允许引入 Java/独立流程服务，则 Camunda 更适合长期治理。
 
  

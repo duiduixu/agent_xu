@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚀 IoT Platform 安装部署手册</title>
+  <style>
+:root {
+  /* 字体：正文宋体系 serif，标题黑体系（政府公文规范，与 Readmdvue 一致） */
+  --gov-font-body: 'Noto Serif CJK SC', 'Source Han Serif SC', 'Source Han Serif CN',
+    '仿宋', 'FangSong', '仿宋_GB2312', 'FangSong_GB2312',
+    '宋体', 'SimSun', 'STSong', 'Times New Roman', serif;
+  --gov-font-heading: 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN',
+    '黑体', 'SimHei', 'PingFang SC', 'Microsoft YaHei', 'Microsoft YaHei UI', sans-serif;
+  --gov-font-mono: 'SF Mono', 'Cascadia Code', Consolas, 'Courier New', monospace;
+
+  /* 布局 */
+  --gov-max-width: 1000px;
+  --gov-font-size: 16px;
+  --gov-line-height: 1.8;
+
+  /* 颜色：黑白严谨，无强调色 */
+  --gov-color-text: #1a1a1a;
+  --gov-color-heading: #000000;
+  --gov-color-secondary: #4a4a4a;
+  --gov-color-border: #8a8a8a;
+  --gov-color-border-light: #d0d0d0;
+  --gov-color-table-header-bg: #eaeaea;
+  --gov-color-code-bg: #f5f5f5;
+  --gov-color-quote-bg: #f7f7f7;
+  --gov-color-link: #0563c1;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--gov-font-body);
+  font-size: var(--gov-font-size);
+  line-height: var(--gov-line-height);
+  color: var(--gov-color-text);
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.gov-container {
+  max-width: var(--gov-max-width);
+  margin: 0 auto;
+  padding: 48px 56px 80px;
+}
+
+/* ===== 标题：黑体、黑色、无阴影无动画（公文规范） ===== */
+.gov-container h1,
+.gov-container h2,
+.gov-container h3,
+.gov-container h4,
+.gov-container h5,
+.gov-container h6 {
+  font-family: var(--gov-font-heading);
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--gov-color-heading);
+  margin: 1.6em 0 0.6em;
+  scroll-margin-top: 20px;
+}
+
+.gov-container h1 {
+  font-size: var(--gov-heading1-size, 1.5em);
+  border-bottom: 1px solid #333333;
+  padding-bottom: 0.3em;
+}
+
+.gov-container h2 {
+  font-size: var(--gov-heading2-size, 1.25em);
+  border-left: 4px solid #333333;
+  padding-left: 0.5em;
+}
+
+.gov-container h3 { font-size: var(--gov-heading3-size, 1.1em); }
+.gov-container h4 { font-size: var(--gov-heading4-size, 1em); }
+.gov-container h5 { font-size: var(--gov-heading5-size, 0.95em); }
+.gov-container h6 { font-size: var(--gov-heading6-size, 0.9em); }
+
+/* ===== 正文段落：首行缩进 2 字符、两端对齐（公文规范） ===== */
+.gov-container p {
+  margin: 0 0 0.75em;
+  text-align: justify;
+  text-justify: inter-ideograph;
+  text-indent: 2em;
+}
+
+/* 列表/引用/表格/目录/代码块内段落不缩进 */
+.gov-container li p,
+.gov-container blockquote p,
+.gov-container td p,
+.gov-container .gov-toc p {
+  text-indent: 0;
+}
+
+/* ===== 列表 ===== */
+.gov-container ul,
+.gov-container ol {
+  margin: 0.5em 0 1em;
+  padding-left: 2em;
+}
+
+.gov-container li {
+  margin: 0.25em 0;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+/* ===== 表格：严谨全边框、表头浅灰居中、无斑马纹 ===== */
+.gov-container table {
+  border-collapse: collapse;
+  width: 100%;
+  max-width: 100%;
+  table-layout: auto;
+  margin: 1em 0;
+  font-size: 0.95em;
+}
+
+.gov-container th,
+.gov-container td {
+  border: 1px solid var(--gov-color-border);
+  padding: 8px 12px;
+  text-align: left;
+  vertical-align: top;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.gov-container th {
+  background: var(--gov-color-table-header-bg);
+  font-weight: 700;
+  text-align: center;
+  color: var(--gov-color-table-header-text, var(--gov-color-heading));
+}
+
+.gov-container tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+.gov-container tbody tr:hover {
+  background: transparent;
+}
+
+/* ===== Mermaid 图表容器：居中、防溢出、黑白严谨 ===== */
+.gov-container .gov-mermaid {
+  margin: 1em 0;
+  text-align: center;
+  overflow-x: auto;
+}
+
+.gov-container .gov-mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.gov-container .gov-mermaid-error {
+  border: 1px solid #d33;
+  background: #fdf2f2;
+  color: #a00;
+  padding: 8px 12px;
+  font-size: 0.9em;
+  margin: 1em 0;
+  text-align: left;
+}
+
+/* ===== 图片点击放大（与 Readmdvue 一致：双击图片 → 全屏模态框） ===== */
+.gov-container img {
+  cursor: zoom-in;
+}
+
+.gov-image-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.gov-image-modal.show {
+  opacity: 1;
+}
+
+.gov-image-modal .gov-image-modal-content {
+  max-width: 94%;
+  max-height: 94%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.gov-image-modal img {
+  max-width: 90vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: default;
+  background: #ffffff;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ===== 代码块：简洁灰底等宽，不做彩色高亮（公文不花哨） ===== */
+.gov-container pre {
+  background: var(--gov-color-code-bg);
+  border: 1px solid var(--gov-color-border-light);
+  border-radius: 3px;
+  padding: 12px 16px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.6;
+  margin: 1em 0;
+}
+
+.gov-container code {
+  font-family: var(--gov-font-mono);
+  background: var(--gov-color-code-bg);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.92em;
+}
+
+.gov-container pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 1em;
+}
+
+/* ===== 代码高亮主题（GitHub 风格浅色，黑白灰为主，公文不花哨） ===== */
+.hljs {
+  color: #24292e;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-doctag,
+.hljs-name {
+  color: #d73a49;
+}
+.hljs-string,
+.hljs-regexp,
+.hljs-addition {
+  color: #032f62;
+}
+.hljs-title,
+.hljs-section,
+.hljs-title.class_,
+.hljs-title.function_ {
+  color: #6f42c1;
+}
+.hljs-number,
+.hljs-literal,
+.hljs-symbol,
+.hljs-bullet {
+  color: #005cc5;
+}
+.hljs-comment,
+.hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+.hljs-variable,
+.hljs-template-variable,
+.hljs-attr,
+.hljs-attribute {
+  color: #e36209;
+}
+.hljs-built_in,
+.hljs-type {
+  color: #005cc5;
+}
+.hljs-meta {
+  color: #6a737d;
+}
+.hljs-emphasis {
+  font-style: italic;
+}
+.hljs-strong {
+  font-weight: 700;
+}
+
+/* ===== 引用：左侧深灰线 + 浅灰底 ===== */
+.gov-container blockquote {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: var(--gov-color-quote-bg);
+  border-left: 3px solid var(--gov-color-border);
+  color: var(--gov-color-secondary);
+}
+
+/* ===== 链接：严谨下划线，不花哨 ===== */
+.gov-container a {
+  color: var(--gov-color-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* ===== 图片 ===== */
+.gov-container img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ===== 水平线 ===== */
+.gov-container hr {
+  border: none;
+  border-top: 1px solid var(--gov-color-border);
+  margin: 1.5em 0;
+}
+
+/* ===== 目录：简洁容器 + 缩进层级 ===== */
+.gov-toc {
+  border: 1px solid var(--gov-color-border-light);
+  background: #fafafa;
+  padding: 1em 1.5em;
+  margin: 1em 0 2em;
+}
+
+.gov-toc-title {
+  font-family: var(--gov-font-heading);
+  font-weight: 700;
+  font-size: 1.1em;
+  color: var(--gov-color-heading);
+  text-align: center;
+  letter-spacing: 0.5em;
+  margin-bottom: 0.8em;
+}
+
+.gov-toc .gov-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.gov-toc .gov-toc-list ul {
+  list-style: none;
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+.gov-toc li {
+  margin: 0.2em 0;
+}
+
+.gov-toc a {
+  color: var(--gov-color-text);
+  text-decoration: none;
+}
+
+.gov-toc a:hover {
+  color: var(--gov-color-link);
+  text-decoration: underline;
+}
+
+/* ===== 公式（KaTeX 渲染后补充） ===== */
+.gov-container .math-formula {
+  font-family: 'Times New Roman', 'KaTeX_Main', serif;
+}
+
+.gov-container .math-block {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+  padding: 0.5em;
+  overflow-x: auto;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
+/* ===== 打印支持（政府文档经常转 PDF） ===== */
+@media print {
+  body {
+    font-size: 12pt;
+  }
+  .gov-container {
+    max-width: none;
+    padding: 0;
+  }
+  .gov-container a {
+    color: #000;
+  }
+}
+
+/* ===== 移动端 ===== */
+@media (max-width: 768px) {
+  .gov-container {
+    padding: 24px 16px 48px;
+  }
+}
+
+:root {
+  --gov-font-body: SimSun, Noto Serif CJK SC, Source Han Serif SC, Source Han Serif CN, 仿宋, FangSong, 仿宋_GB2312, FangSong_GB2312, 宋体, SimSun, STSong, Times New Roman, serif;
+  --gov-font-heading: SimHei, Noto Sans CJK SC, Source Han Sans SC, Source Han Sans CN, 黑体, SimHei, PingFang SC, Microsoft YaHei, sans-serif;
+  --gov-font-mono: Consolas, SF Mono, Cascadia Code, Consolas, Courier New, monospace;
+  --gov-font-size: 14.67px;
+  --gov-line-height: 1.5;
+  --gov-text-indent: 2em;
+  --gov-heading1-size: 20px;
+  --gov-heading2-size: 17.33px;
+  --gov-heading3-size: 16px;
+  --gov-heading4-size: 16px;
+  --gov-heading5-size: 16px;
+  --gov-heading6-size: 16px;
+  --gov-color-text: #000000;
+  --gov-color-heading: #000000;
+  --gov-color-link: #0563C1;
+  --gov-color-border: #BFBFBF;
+  --gov-color-table-header-bg: #D9D9D9;
+  --gov-color-table-header-text: #000000;
+}</style>
+</head>
+<body>
+  <div class="gov-container">
+    <hr>
+<h2>typora-copy-images-to: ./....\图床</h2>
+<h1>🚀 IoT Platform 安装部署手册</h1>
+<p><a href="./Versions/v5.3.md"><img src="https://img.shields.io/badge/version-v5.3.0-blue.svg" alt="Version"></a><br><a href="https://dotnet.microsoft.com/"><img src="https://img.shields.io/badge/.NET-8.0-purple.svg" alt=".NET"></a><br><a href="https://ubuntu.com/"><img src="https://img.shields.io/badge/platform-Ubuntu%2022.04-orange.svg" alt="Platform"></a></p>
+<blockquote>
+<p><strong>📋 文档说明</strong><br>本手册适用于在 Ubuntu 22.04 系统上部署 IoT Platform 物联网平台，包含完整的环境配置、服务安装、系统配置和故障排查指南。</p>
+</blockquote>
+<h2>📑 目录</h2>
+<ul>
+<li><a href="#%E5%AE%89%E8%A3%85%E6%B5%81%E7%A8%8B%E9%A1%BA%E5%BA%8F%E5%9B%BE">🔄 安装流程顺序图</a></li>
+<li><a href="#%E8%87%AA%E5%8A%A8%E5%8C%96%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC">🤖 自动化安装脚本</a><ul>
+<li><a href="#%E8%84%9A%E6%9C%AC%E6%96%87%E4%BB%B6%E6%B8%85%E5%8D%95">📦 脚本文件清单</a></li>
+<li><a href="#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">🚀 快速开始</a></li>
+<li><a href="#%E8%84%9A%E6%9C%AC%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E">📋 脚本详细说明</a></li>
+<li><a href="#%E4%BD%BF%E7%94%A8%E5%89%8D%E7%BD%AE%E6%9D%A1%E4%BB%B6">⚙️ 使用前置条件</a></li>
+<li><a href="#%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7">🔧 故障排查工具</a></li>
+</ul>
+</li>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E8%A6%81%E6%B1%82">🖥️ 系统要求</a></li>
+<li><a href="#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87">🛠️ 环境准备</a></li>
+<li><a href="#%E6%9C%8D%E5%8A%A1%E5%AE%89%E8%A3%85">📦 服务安装</a></li>
+<li><a href="#%E7%B3%BB%E7%BB%9F%E9%85%8D%E7%BD%AE">⚙️ 系统配置</a><ul>
+<li><a href="#-yaml%E8%AF%AD%E6%B3%95%E8%A7%84%E8%8C%83%E8%AF%B4%E6%98%8E">🆕 YAML语法规范说明</a></li>
+<li><a href="#-fengiot%E6%9C%8D%E5%8A%A1%E8%AF%A6%E7%BB%86%E8%AF%B4%E6%98%8E">🆕 FengIoT服务详细说明</a></li>
+<li><a href="#-%E9%83%A8%E7%BD%B2%E5%89%8D%E6%A3%80%E6%9F%A5%E6%9C%BA%E5%88%B6">🆕 部署前检查机制</a></li>
+<li><a href="#-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E9%AA%8C%E8%AF%81%E5%B7%A5%E5%85%B7">🆕 配置文件验证工具</a></li>
+<li><a href="#-%E9%83%A8%E7%BD%B2%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5">🆕 部署最佳实践</a></li>
+</ul>
+</li>
+<li><a href="#%E9%83%A8%E7%BD%B2%E9%AA%8C%E8%AF%81">🚀 部署验证</a></li>
+<li><a href="#%E6%95%85%E9%9A%9C%E6%8E%92%E6%9F%A5">🔧 故障排查</a></li>
+<li><a href="#%E7%BB%B4%E6%8A%A4%E7%AE%A1%E7%90%86">🛡️ 维护管理</a></li>
+<li><a href="#%E6%8A%80%E6%9C%AF%E6%94%AF%E6%8C%81">📞 技术支持</a></li>
+</ul>
+<hr>
+<h2>🔄 安装流程顺序图</h2>
+<h3>📊 可视化流程图</h3>
+<h3>📋 文本版流程图（备选显示）</h3>
+<pre><code>🏁 开始安装
+    ↓
+📋 系统要求检查
+    ↓
+❓ 系统要求满足? ──→ [否] ──→ ❌ 升级系统配置 ──┐
+    ↓ [是]                                    ↑
+📁 创建目录结构                                ↑
+    ↓                                        ↑
+🔄 第一阶段: 系统基础准备 ←─────────────────────┘
+    ├── 系统更新
+    ├── 安装基础工具
+    └── 配置防火墙
+    ↓
+🛠️ 第二阶段: 基础软件安装
+    ├── 安装 .NET 8 SDK
+    ├── 安装 1Panel 管理面板
+    └── 安装 Docker &amp; Docker Compose
+    ↓
+🗄️ 第三阶段: 中间件安装
+    ├── 安装 EMQX 消息代理
+    ├── 安装 TDengine 服务端
+    ├── 安装 TDengine 客户端
+    └── 安装 Nginx 反向代理
+    ↓
+⚙️ 第四阶段: 系统配置
+    ├── 配置 Nginx
+    ├── 创建 Docker Compose 配置
+    ├── 配置应用程序
+    ├── 配置数据库连接
+    └── 配置缓存和MQTT
+    ↓
+🚀 第五阶段: 部署验证
+    ├── 部署前检查 ──→ ❓ 检查通过? ──→ [否] ──→ 🔧 修复配置问题 ──┐
+    │                    ↓ [是]                                    ↑
+    ├── 分步启动服务 ←─────────────────────────────────────────────┘
+    ├── 启动基础服务 ──→ ❓ 基础服务正常? ──→ [否] ──→ 🔧 排查基础服务问题 ──┐
+    │                    ↓ [是]                                        ↑
+    ├── 启动应用服务 ←─────────────────────────────────────────────────┘
+    ├── 健康检查 ──→ ❓ 所有服务正常? ──→ [否] ──→ 🔧 故障排查 ──┐
+    │                ↓ [是]                                    ↑
+    └── 🎉 部署完成 ←─────────────────────────────────────────┘
+         ↓
+    📊 访问验证
+    ├── 前端界面: :9004
+    ├── 后端API: :9081
+    └── EMQX管理: :18083
+</code></pre>
+<blockquote>
+<p><strong>📋 流程说明</strong></p>
+<ul>
+<li><strong>🏁/🎉</strong>：开始/完成节点</li>
+<li><strong>❓</strong>：检查决策点</li>
+<li><strong>🔧</strong>：问题处理节点</li>
+<li><strong>分阶段部署</strong>：确保每个阶段完成后再进行下一阶段</li>
+<li><strong>验证机制</strong>：每个关键步骤都有对应的验证检查</li>
+<li><strong>循环处理</strong>：问题发现后可以回到对应步骤修复</li>
+</ul>
+</blockquote>
+<hr>
+<h2>🤖 自动化安装脚本</h2>
+<blockquote>
+<p><strong>🆕 v5.3.0 新增功能</strong><br>为了简化部署流程，我们提供了完整的自动化安装脚本套件，可以一键完成IoT Platform的安装、配置和部署。</p>
+</blockquote>
+<h3>📦 脚本文件清单</h3>
+<table>
+<thead>
+<tr>
+<th>脚本文件</th>
+<th>功能描述</th>
+<th>使用场景</th>
+<th>执行时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>setup_iot_platform.sh</code></td>
+<td><strong>主控制脚本</strong></td>
+<td>一键安装入口，整合所有功能</td>
+<td>交互式</td>
+</tr>
+<tr>
+<td><code>install_iot_platform.sh</code></td>
+<td>基础组件安装</td>
+<td>安装.NET、Docker、EMQX、TDengine等</td>
+<td>30-60分钟</td>
+</tr>
+<tr>
+<td><code>configure_iot_platform.sh</code></td>
+<td>系统配置</td>
+<td>配置Nginx、Docker Compose、应用配置</td>
+<td>5-10分钟</td>
+</tr>
+<tr>
+<td><code>deploy_iot_platform.sh</code></td>
+<td>应用部署</td>
+<td>启动服务、健康检查、故障排查</td>
+<td>10-20分钟</td>
+</tr>
+<tr>
+<td><code>backup_iot_platform.sh</code></td>
+<td>数据备份</td>
+<td>数据库备份、配置备份、恢复功能</td>
+<td>5-15分钟</td>
+</tr>
+<tr>
+<td><code>monitor_iot_platform.sh</code></td>
+<td>系统监控</td>
+<td>服务监控、性能监控、告警检查</td>
+<td>实时监控</td>
+</tr>
+</tbody></table>
+<h3>🚀 快速开始</h3>
+<h4>方式一：一键安装（推荐新用户）</h4>
+<pre><code class="language-bash"># 1. 下载所有脚本文件到服务器
+# 确保所有.sh文件在同一目录下
+
+# 2. 设置脚本执行权限
+chmod +x *.sh
+
+# 3. 运行主安装脚本
+./setup_iot_platform.sh
+
+# 4. 在交互界面中选择&quot;完整安装&quot;
+# 5. 按提示完成安装过程
+</code></pre>
+<h4>方式二：分步安装（适合高级用户）</h4>
+<pre><code class="language-bash"># 步骤1: 安装基础组件
+./install_iot_platform.sh
+
+# 步骤2: 配置系统
+./configure_iot_platform.sh
+
+# 步骤3: 准备应用文件（手动操作）
+# 将应用程序文件复制到指定目录
+
+# 步骤4: 部署应用
+./deploy_iot_platform.sh
+</code></pre>
+<h3>📋 脚本详细说明</h3>
+<h4>1. 主控制脚本 (<code>setup_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>提供友好的交互式菜单界面</li>
+<li>整合所有安装、配置、部署功能</li>
+<li>支持完整安装和分步操作</li>
+<li>包含系统监控和维护工具</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash">./setup_iot_platform.sh
+</code></pre>
+<p><strong>功能菜单：</strong></p>
+<ul>
+<li>🚀 完整安装 (推荐新用户)</li>
+<li>📦 仅安装基础组件</li>
+<li>⚙️ 仅配置系统</li>
+<li>🎯 仅部署应用</li>
+<li>💾 备份系统</li>
+<li>📊 系统监控</li>
+<li>🔧 故障排查</li>
+<li>📋 查看状态</li>
+<li>🛠️ 维护工具</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li>首次部署IoT Platform</li>
+<li>日常维护和管理</li>
+<li>系统监控和故障排查</li>
+</ul>
+<h4>2. 基础组件安装脚本 (<code>install_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>自动安装所有必需的基础软件组件</li>
+<li>支持完整安装和自定义安装模式</li>
+<li>包含系统要求检查和验证功能</li>
+<li>自动配置防火墙和系统优化</li>
+</ul>
+<p><strong>安装组件清单：</strong></p>
+<ul>
+<li>⚪ .NET 8 SDK - 应用运行时环境（可选安装）</li>
+<li>✅ 1Panel 管理面板 - Docker可视化管理</li>
+<li>✅ EMQX 消息代理 - MQTT消息服务</li>
+<li>✅ TDengine 时序数据库 - 时序数据存储（支持本地/在线安装）</li>
+<li>✅ Nginx 反向代理 - Web服务器</li>
+<li>✅ Docker &amp; Docker Compose - 容器化部署</li>
+</ul>
+<p><strong>🆕 组件安装说明：</strong></p>
+<ul>
+<li><strong>.NET 8 SDK</strong>：可选安装，用于运行IoT Platform应用程序</li>
+<li><strong>Docker</strong>：自动安装，用于容器化部署</li>
+<li><strong>TDengine</strong>：支持本地安装和在线安装两种方式</li>
+<li><strong>TDengine客户端</strong>：自动解压到/app/cloudiot/目录，无需手动放置</li>
+</ul>
+<p><strong>🆕 TDengine安装方式：</strong></p>
+<ul>
+<li><strong>本地安装</strong>：使用预下载的安装包，支持动态版本号检测</li>
+<li><strong>在线安装</strong>：自动下载最新版本（需要稳定网络连接）</li>
+<li><strong>安装后自动执行</strong>：<code>sudo start-all.sh</code> 启动全部服务</li>
+<li><strong>客户端处理</strong>：自动解压客户端到应用目录，并更新Dockerfile版本号</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash"># 完整安装（推荐）
+./install_iot_platform.sh
+
+# 交互式选择安装组件
+./install_iot_platform.sh
+# 选择&quot;自定义安装&quot;，然后按需选择组件
+</code></pre>
+<p><strong>执行流程：</strong></p>
+<ol>
+<li>系统要求检查</li>
+<li>创建目录结构</li>
+<li>系统更新和基础工具安装</li>
+<li>防火墙配置</li>
+<li>各组件依次安装</li>
+<li>安装验证</li>
+</ol>
+<h4>3. 系统配置脚本 (<code>configure_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>配置所有系统组件和服务</li>
+<li>生成Docker Compose配置文件</li>
+<li>创建应用程序配置文件</li>
+<li>支持PostgreSQL和MySQL数据库选择</li>
+</ul>
+<p><strong>配置内容：</strong></p>
+<ul>
+<li>🔧 Nginx 反向代理配置</li>
+<li>🐳 Docker Compose 服务编排配置</li>
+<li>🗄️ 数据库连接配置 (PostgreSQL/MySQL)</li>
+<li>💾 Redis 缓存配置</li>
+<li>📁 应用目录结构创建</li>
+<li>🔐 TDengine 和 EMQX 连接配置</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash">./configure_iot_platform.sh
+</code></pre>
+<p><strong>交互选项：</strong></p>
+<ul>
+<li>数据库类型选择（PostgreSQL/MySQL）</li>
+<li>配置参数自定义</li>
+<li>目录权限设置</li>
+</ul>
+<p><strong>生成的配置文件：</strong></p>
+<ul>
+<li><code>/etc/nginx/conf.d/cloudiothtml.conf</code> - Nginx配置</li>
+<li><code>/app/docker-compose.yml</code> - Docker Compose配置</li>
+<li><code>/app/cloudiot/Configuration/Database.json</code> - 数据库配置</li>
+<li><code>/app/cloudiot/Configuration/Cache.json</code> - 缓存配置</li>
+<li><code>/app/cloudiot/Dockerfile</code> - Docker构建文件</li>
+</ul>
+<h4>4. 应用部署脚本 (<code>deploy_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>执行完整的应用部署流程</li>
+<li>包含部署前环境检查</li>
+<li>分步启动服务（数据库→缓存→应用）</li>
+<li>自动健康检查和验证</li>
+<li>提供故障排查工具</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash"># 完整部署
+./deploy_iot_platform.sh
+
+# 仅检查环境
+./deploy_iot_platform.sh check
+
+# 健康检查
+./deploy_iot_platform.sh health
+
+# 重启服务
+./deploy_iot_platform.sh restart
+
+# 停止服务
+./deploy_iot_platform.sh stop
+
+# 故障排查
+./deploy_iot_platform.sh troubleshoot
+</code></pre>
+<p><strong>部署流程：</strong></p>
+<ol>
+<li><p><strong>部署前检查</strong></p>
+<ul>
+<li>必需文件存在性检查</li>
+<li>必需目录结构检查</li>
+<li>TDengine客户端检查</li>
+<li>端口占用检查</li>
+<li>Docker配置验证</li>
+</ul>
+</li>
+<li><p><strong>分步启动服务</strong></p>
+<ul>
+<li>启动基础服务（数据库、Redis）</li>
+<li>等待基础服务就绪</li>
+<li>启动应用服务</li>
+<li>服务状态验证</li>
+</ul>
+</li>
+<li><p><strong>健康检查</strong></p>
+<ul>
+<li>应用端口检查</li>
+<li>数据库连接测试</li>
+<li>Redis连接测试</li>
+<li>TDengine连接测试</li>
+<li>EMQX连接测试</li>
+<li>HTTP服务响应测试</li>
+</ul>
+</li>
+</ol>
+<p><strong>故障排查功能：</strong></p>
+<ul>
+<li>查看所有服务状态</li>
+<li>查看应用日志</li>
+<li>查看数据库日志</li>
+<li>查看Redis日志</li>
+<li>重启所有服务</li>
+<li>重新构建应用</li>
+</ul>
+<h4>5. 数据备份脚本 (<code>backup_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>自动备份数据库和配置文件</li>
+<li>支持PostgreSQL和MySQL数据库</li>
+<li>包含Redis数据备份</li>
+<li>自动压缩和清理过期备份</li>
+<li>提供数据恢复功能</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash"># 完整备份
+./backup_iot_platform.sh
+
+# 恢复数据库
+./backup_iot_platform.sh restore
+
+# 列出备份文件
+./backup_iot_platform.sh list
+
+# 清理过期备份
+./backup_iot_platform.sh cleanup
+</code></pre>
+<p><strong>备份内容：</strong></p>
+<ul>
+<li><p><strong>数据库备份</strong></p>
+<ul>
+<li>PostgreSQL: FengCloudIotV5, CloudDataModeling</li>
+<li>MySQL: FengCloudIotV5, CloudDataModeling</li>
+<li>自动压缩为.gz格式</li>
+</ul>
+</li>
+<li><p><strong>Redis数据备份</strong></p>
+<ul>
+<li>RDB快照文件</li>
+<li>包含所有缓存数据</li>
+</ul>
+</li>
+<li><p><strong>配置文件备份</strong></p>
+<ul>
+<li>应用配置文件</li>
+<li>Docker Compose配置</li>
+<li>Nginx配置</li>
+<li>系统配置文件</li>
+</ul>
+</li>
+<li><p><strong>应用文件备份</strong></p>
+<ul>
+<li>上传文件目录</li>
+<li>日志文件</li>
+<li>运行时数据</li>
+</ul>
+</li>
+</ul>
+<p><strong>备份策略：</strong></p>
+<ul>
+<li>默认保留7天的备份文件</li>
+<li>自动清理过期备份</li>
+<li>备份文件完整性验证</li>
+<li>支持增量备份</li>
+</ul>
+<h4>6. 系统监控脚本 (<code>monitor_iot_platform.sh</code>)</h4>
+<p><strong>功能概述：</strong></p>
+<ul>
+<li>实时监控系统资源和服务状态</li>
+<li>自动告警和异常检测</li>
+<li>生成详细的监控报告</li>
+<li>性能分析和优化建议</li>
+</ul>
+<p><strong>使用方法：</strong></p>
+<pre><code class="language-bash"># 完整监控检查
+./monitor_iot_platform.sh
+
+# 性能监控
+./monitor_iot_platform.sh performance
+
+# 生成监控报告
+./monitor_iot_platform.sh report
+
+# 告警检查
+./monitor_iot_platform.sh alert
+</code></pre>
+<p><strong>监控内容：</strong></p>
+<ul>
+<li><p><strong>系统资源监控</strong></p>
+<ul>
+<li>CPU使用率</li>
+<li>内存使用率</li>
+<li>磁盘使用率</li>
+<li>系统负载</li>
+<li>网络连接状态</li>
+</ul>
+</li>
+<li><p><strong>服务状态监控</strong></p>
+<ul>
+<li>Docker容器状态</li>
+<li>端口监听状态</li>
+<li>数据库连接状态</li>
+<li>外部服务状态（TDengine、EMQX、Nginx）</li>
+</ul>
+</li>
+<li><p><strong>应用健康监控</strong></p>
+<ul>
+<li>后端API健康检查</li>
+<li>前端服务响应</li>
+<li>日志错误检查</li>
+<li>性能指标监控</li>
+</ul>
+</li>
+</ul>
+<p><strong>告警机制：</strong></p>
+<ul>
+<li>CPU使用率 &gt; 80%</li>
+<li>内存使用率 &gt; 85%</li>
+<li>磁盘使用率 &gt; 85%</li>
+<li>服务异常状态</li>
+<li>应用响应异常</li>
+</ul>
+<h3>⚙️ 使用前置条件</h3>
+<h4>系统环境要求</h4>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>操作系统</strong></td>
+<td>Ubuntu 22.04 LTS</td>
+<td>必须是64位系统</td>
+</tr>
+<tr>
+<td><strong>用户权限</strong></td>
+<td>root用户 或 普通用户+sudo权限</td>
+<td>脚本智能适配用户类型</td>
+</tr>
+<tr>
+<td><strong>网络连接</strong></td>
+<td>稳定的互联网连接</td>
+<td>用于下载软件包</td>
+</tr>
+<tr>
+<td><strong>磁盘空间</strong></td>
+<td>至少50GB可用空间</td>
+<td>包含系统、应用、数据存储</td>
+</tr>
+<tr>
+<td><strong>内存</strong></td>
+<td>至少4GB RAM</td>
+<td>推荐8GB以上</td>
+</tr>
+</tbody></table>
+<h4>🔐 用户权限说明</h4>
+<p><strong>Root用户模式：</strong></p>
+<ul>
+<li>直接使用root用户运行脚本</li>
+<li>所有命令直接执行，无需sudo</li>
+<li>适合生产服务器环境</li>
+</ul>
+<p><strong>普通用户模式：</strong></p>
+<ul>
+<li>使用具有sudo权限的普通用户运行</li>
+<li>脚本会在需要时自动使用sudo</li>
+<li>适合开发和测试环境</li>
+</ul>
+<p>脚本会自动检测当前用户类型并采用相应的执行方式。</p>
+<h4>必需文件准备</h4>
+<p>在执行部署脚本前，请确保以下文件已准备就绪：</p>
+<pre><code class="language-bash"># 1. 应用程序文件（必需）
+/app/cloudiot/IotPlatform.dll              # 主程序文件
+/app/cloudiot/Configuration/               # 配置文件目录
+/app/cloudiot/                            # 其他应用程序文件
+
+# 2. 前端文件（必需）
+/app/cloudiothtml/                         # 前端静态文件
+/app/cloudiothtml/index.html              # 主页文件
+
+# 3. TDengine客户端（自动处理）
+# 安装脚本会自动将TDengine客户端解压到 /app/cloudiot/ 目录
+# 无需用户手动准备或放置
+# 支持动态版本号检测和Dockerfile自动更新
+
+# 4. 数据目录（自动创建）
+/app/Upload/                               # 文件上传目录
+/home/data/                               # 数据库数据目录
+</code></pre>
+<h4>端口要求</h4>
+<p>确保以下端口未被其他服务占用：</p>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>端口</th>
+<th>协议</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IoT Platform</td>
+<td>9081</td>
+<td>HTTP</td>
+<td>主应用端口</td>
+</tr>
+<tr>
+<td>Web Frontend</td>
+<td>9004</td>
+<td>HTTP</td>
+<td>前端访问地址</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>5432</td>
+<td>TCP</td>
+<td>数据库端口</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>3310</td>
+<td>TCP</td>
+<td>数据库端口(可选)</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>6379</td>
+<td>TCP</td>
+<td>缓存服务</td>
+</tr>
+<tr>
+<td>EMQX</td>
+<td>1883</td>
+<td>MQTT</td>
+<td>MQTT消息端口</td>
+</tr>
+<tr>
+<td>EMQX</td>
+<td>8083</td>
+<td>HTTP</td>
+<td>EMQX HTTP API</td>
+</tr>
+<tr>
+<td>EMQX</td>
+<td>18083</td>
+<td>HTTP</td>
+<td>EMQX Dashboard</td>
+</tr>
+<tr>
+<td>TDengine</td>
+<td>6030</td>
+<td>TCP</td>
+<td>时序数据库</td>
+</tr>
+</tbody></table>
+<h4>网络要求</h4>
+<p>脚本需要访问以下外部资源：</p>
+<ul>
+<li><strong>Microsoft软件源</strong> - 下载.NET 8 SDK</li>
+<li><strong>1Panel官方源</strong> - 下载1Panel管理面板</li>
+<li><strong>EMQX官方源</strong> - 下载EMQX消息代理</li>
+<li><strong>TDengine官方源</strong> - 下载TDengine数据库</li>
+<li><strong>Docker官方源</strong> - 下载Docker和Docker Compose</li>
+<li><strong>Ubuntu软件源</strong> - 系统更新和基础软件</li>
+</ul>
+<h3>🔧 故障排查工具</h3>
+<h4>内置故障排查功能</h4>
+<p>所有脚本都包含详细的错误检查和故障排查功能：</p>
+<p><strong>1. 部署前检查</strong></p>
+<pre><code class="language-bash"># 检查系统环境
+./deploy_iot_platform.sh check
+
+# 检查结果示例：
+# ✓ /app/cloudiot/IotPlatform.dll
+# ✓ /app/cloudiot/Dockerfile
+# ✗ 缺少必需文件: /app/cloudiot/Configuration/Database.json
+</code></pre>
+<p><strong>2. 健康检查</strong></p>
+<pre><code class="language-bash"># 检查服务状态
+./deploy_iot_platform.sh health
+
+# 检查结果示例：
+# ✓ 应用端口9081正常监听
+# ✓ PostgreSQL连接正常
+# ✗ Redis连接失败
+</code></pre>
+<p><strong>3. 交互式故障排查</strong></p>
+<pre><code class="language-bash"># 进入故障排查模式
+./deploy_iot_platform.sh troubleshoot
+
+# 提供以下选项：
+# 1) 查看所有服务状态
+# 2) 查看应用日志
+# 3) 查看数据库日志
+# 4) 查看Redis日志
+# 5) 重启所有服务
+# 6) 重新构建应用
+</code></pre>
+<h4>常见问题解决方案</h4>
+<p><strong>问题1：端口占用</strong></p>
+<pre><code class="language-bash"># 检查端口占用
+netstat -tlnp | grep :9081
+
+# 解决方案：
+# 1. 停止占用端口的服务
+# 2. 修改配置文件中的端口号
+# 3. 重新部署
+</code></pre>
+<p><strong>问题2：权限问题</strong></p>
+<pre><code class="language-bash"># 重置目录权限
+sudo chmod -R 755 /app
+sudo chown -R $USER:$USER /app
+</code></pre>
+<p><strong>问题3：Docker构建失败</strong></p>
+<pre><code class="language-bash"># 查看详细构建日志
+docker-compose up --build fengiot
+
+# 常见原因：
+# - TDengine客户端目录不存在
+# - Dockerfile语法错误
+# - 网络连接问题
+</code></pre>
+<p><strong>问题4：数据库连接失败</strong></p>
+<pre><code class="language-bash"># 检查数据库服务状态
+docker-compose ps
+
+# 测试数据库连接
+docker exec postgresql pg_isready -U postgres
+docker exec mysql8 mysqladmin -u root -p&quot;Fh@201001.&quot; ping
+</code></pre>
+<h4>日志查看</h4>
+<p><strong>应用日志：</strong></p>
+<pre><code class="language-bash"># 查看实时日志
+docker-compose logs -f fengiot
+
+# 查看历史日志
+docker-compose logs fengiot | tail -100
+</code></pre>
+<p><strong>系统日志：</strong></p>
+<pre><code class="language-bash"># 查看系统服务日志
+journalctl -u emqx -f
+journalctl -u taosd -f
+journalctl -u nginx -f
+</code></pre>
+<p><strong>监控日志：</strong></p>
+<pre><code class="language-bash"># 查看监控报告
+ls -la /app/logs/monitor_report_*.txt
+
+# 查看备份日志
+tail -f /app/logs/backup.log
+</code></pre>
+<hr>
+<h2>🖥️ 系统要求</h2>
+<h3>硬件要求</h3>
+<table>
+<thead>
+<tr>
+<th>组件</th>
+<th>最低配置</th>
+<th>推荐配置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td>2核心</td>
+<td>4核心+</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>4GB</td>
+<td>8GB+</td>
+</tr>
+<tr>
+<td>存储</td>
+<td>50GB</td>
+<td>100GB+</td>
+</tr>
+<tr>
+<td>网络</td>
+<td>100Mbps</td>
+<td>1Gbps</td>
+</tr>
+</tbody></table>
+<h3>软件要求</h3>
+<table>
+<thead>
+<tr>
+<th>软件</th>
+<th>版本要求</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ubuntu</td>
+<td>22.04 LTS</td>
+<td>操作系统</td>
+</tr>
+<tr>
+<td>.NET SDK</td>
+<td>8.0+</td>
+<td>运行时环境</td>
+</tr>
+<tr>
+<td>Docker</td>
+<td>20.10+</td>
+<td>容器化部署</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>2.0+</td>
+<td>容器编排</td>
+</tr>
+</tbody></table>
+<h3>端口要求</h3>
+<table>
+<thead>
+<tr>
+<th>服务</th>
+<th>端口</th>
+<th>协议</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IoT Platform</td>
+<td>9081</td>
+<td>HTTP</td>
+<td>主应用端口</td>
+</tr>
+<tr>
+<td>IoT Platform  Web</td>
+<td>9004</td>
+<td>HTTP</td>
+<td>前端访问地址</td>
+</tr>
+<tr>
+<td>PostgreSQL</td>
+<td>5432</td>
+<td>TCP</td>
+<td>数据库(默认)</td>
+</tr>
+<tr>
+<td>MySQL</td>
+<td>3310</td>
+<td>TCP</td>
+<td>数据库(可选)</td>
+</tr>
+<tr>
+<td>Redis</td>
+<td>6379</td>
+<td>TCP</td>
+<td>缓存服务</td>
+</tr>
+<tr>
+<td>EMQX</td>
+<td>1883/8083</td>
+<td>MQTT/HTTP</td>
+<td>消息代理</td>
+</tr>
+<tr>
+<td>TDengine</td>
+<td>6030</td>
+<td>TCP</td>
+<td>时序数据库</td>
+</tr>
+<tr>
+<td>Nginx</td>
+<td>80/443</td>
+<td>HTTP/HTTPS</td>
+<td>反向代理</td>
+</tr>
+</tbody></table>
+<hr>
+<h2>🛠️ 环境准备</h2>
+<h3>1. 创建应用目录</h3>
+<pre><code class="language-bash"># 创建应用根目录
+sudo mkdir -p /app
+sudo chmod -R 777 /app
+cd /app
+
+# 创建子目录结构
+mkdir -p {cloudiot,cloudiothtml}
+</code></pre>
+<h3>2. 系统更新</h3>
+<pre><code class="language-bash"># 更新系统包
+sudo apt update &amp;&amp; sudo apt upgrade -y
+
+# 安装基础工具，非必要操作
+sudo apt install -y curl wget unzip vim net-tools
+</code></pre>
+<h3>3. 防火墙配置</h3>
+<pre><code class="language-bash"># 如遇到防火墙开放的环境，这是必不可少的环节
+# 配置UFW防火墙
+sudo ufw allow 22/tcp    # SSH
+sudo ufw allow 80/tcp    # HTTP
+sudo ufw allow 443/tcp   # HTTPS
+sudo ufw allow 9081/tcp  # IoT Platform
+sudo ufw allow 9004/tcp  # IoT Platform Web
+sudo ufw allow 1883/tcp  # MQTT
+sudo ufw allow 8083/tcp  # EMQX HTTP API
+sudo ufw --force enable
+</code></pre>
+<hr>
+<h2>📦 服务安装</h2>
+<h3>1. 安装 .NET 8 SDK（容器安装方式可不必安装）</h3>
+<pre><code class="language-bash"># 添加Microsoft包源
+wget https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+
+# 安装.NET 8 SDK
+sudo apt-get update &amp;&amp; sudo apt-get install -y dotnet-sdk-8.0
+
+# 验证安装
+dotnet --version
+</code></pre>
+<blockquote>
+<p><strong>✅ 验证提示</strong><br>确保输出版本号为 8.0.x</p>
+</blockquote>
+<h3>2. 安装 1Panel 管理面板</h3>
+<pre><code class="language-bash"># 下载并安装1Panel，主要目的是可以自动升级安装docker，可视化配置镜像加速
+# 执行以下安装脚本，根据命令行提示完成安装。
+bash -c &quot;$(curl -sSL https://resource.fit2cloud.com/1panel/package/v2/quick_start.sh)&quot;
+
+# 官网地址
+# https://1panel.cn/docs/v2/installation/online_installation/#2
+
+# 安装成功后，控制台会打印面板访问信息，可通过浏览器访问 1Panel：
+# http://目标服务器 IP 地址:目标端口/安全入口
+
+# 忘记账号密码可通过该命令查看
+sudo 1panel user-info
+# 重置密码
+sudo 1pctl update password
+
+# 查看1Panel状态
+sudo systemctl status 1panel
+
+# 访问实际地址，端口后面部分都非固定的，根据实际的填写
+http://$LOCAL_IP:24917/24371cb3b1
+</code></pre>
+<h3>2.1 🗄️ 数据库定时备份配置</h3>
+<blockquote>
+<p><strong>🚀 推荐方案</strong><br>使用1Panel面板进行数据库备份，具有<strong>性能更高</strong>、<strong>压缩更好</strong>、<strong>移植通用性高</strong>的优势，是生产环境的首选备份方案。</p>
+</blockquote>
+<h4>📋 备份方案优势</h4>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>传统备份</th>
+<th>1Panel备份</th>
+<th>优势说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>性能</strong></td>
+<td>超高</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>多线程并行备份，速度提升60%</td>
+</tr>
+<tr>
+<td><strong>压缩率</strong></td>
+<td>高</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>智能压缩算法，节省80%存储空间</td>
+</tr>
+<tr>
+<td><strong>通用性</strong></td>
+<td>有限</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>支持多种数据库，跨平台兼容</td>
+</tr>
+<tr>
+<td><strong>自动化</strong></td>
+<td>需手动配置</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>可视化配置，一键设置定时任务</td>
+</tr>
+<tr>
+<td><strong>恢复便利性</strong></td>
+<td>简单</td>
+<td>⭐⭐⭐⭐⭐</td>
+<td>一键恢复，支持增量备份</td>
+</tr>
+</tbody></table>
+<h4>🔧 配置步骤详解</h4>
+<p><strong>第一步：创建数据库连接</strong></p>
+<blockquote>
+<p><strong>📋 前置条件</strong><br>确保PostgreSQL服务正常运行，并且已获取正确的连接信息。</p>
+</blockquote>
+<ol>
+<li><p><strong>登录1Panel管理面板</strong></p>
+<pre><code class="language-bash"># 访问1Panel面板
+http://your-server-ip:端口/安全入口
+</code></pre>
+</li>
+<li><p><strong>导航到数据库管理</strong></p>
+<ul>
+<li>点击左侧菜单 <strong>&quot;数据库&quot;</strong></li>
+<li>选择 <strong>&quot;PostgreSQL&quot;<strong>或</strong>&quot;MySql&quot;</strong> 选项卡</li>
+</ul>
+</li>
+<li><p><strong>添加数据库连接</strong></p>
+<p><img src="https://s2.loli.net/2025/07/31/Oxpus2nBlf3h1Kz.png" alt="数据库连接配置"></p>
+<p><strong>PostgreSQL连接参数配置：</strong></p>
+<pre><code class="language-json">{
+  &quot;名称&quot;: &quot;IoT-Platform-PostgreSQL&quot;,
+  &quot;主机地址&quot;: &quot;172.17.0.1&quot;,
+  &quot;端口&quot;: &quot;5432&quot;,
+  &quot;用户名&quot;: &quot;postgres&quot;,
+  &quot;密码&quot;: &quot;Fh@201001.&quot;,
+  &quot;描述&quot;: &quot;IoT平台PostgreSQL主数据库&quot;
+}
+</code></pre>
+<p><strong>MySQL连接参数配置（可选）：</strong></p>
+<pre><code class="language-json">{
+  &quot;名称&quot;: &quot;IoT-Platform-MySQL&quot;,
+  &quot;主机地址&quot;: &quot;172.17.0.1&quot;,
+  &quot;端口&quot;: &quot;3310&quot;,
+  &quot;用户名&quot;: &quot;root&quot;,
+  &quot;密码&quot;: &quot;Fh@201001.&quot;,
+  &quot;描述&quot;: &quot;IoT平台MySQL主数据库&quot;
+}
+</code></pre>
+</li>
+</ol>
+<p><strong>第二步：配置备份策略</strong></p>
+<ol start="4">
+<li><p><strong>创建备份任务</strong></p>
+<p><img src="https://s2.loli.net/2025/07/31/nyd6czh7BFZDCqR.png" alt="备份任务创建"></p>
+<p><strong>备份配置参数：</strong></p>
+<pre><code class="language-yaml">备份名称: &quot;IoT-Platform-Daily-Backup&quot;
+备份类型: &quot;完整备份&quot;
+压缩格式: &quot;gzip&quot; # 推荐使用，压缩率高
+备份路径: &quot;/app/backup/database/&quot;
+保留天数: 30 # 根据存储空间调整
+</code></pre>
+</li>
+<li><p><strong>设置定时规则</strong></p>
+<p><img src="https://s2.loli.net/2025/07/31/HTuz8Z93xUoleqD.png" alt="定时规则设置"></p>
+<p><strong>推荐定时策略：</strong></p>
+<pre><code class="language-cron"># 每日凌晨2点执行完整备份
+0 2 * * *
+
+# 每4小时执行增量备份（可选）
+0 */4 * * *
+
+# 每周日执行深度备份清理
+0 1 * * 0
+</code></pre>
+</li>
+</ol>
+<p><strong>第三步：验证备份配置</strong></p>
+<ol start="6">
+<li><p><strong>测试备份功能</strong></p>
+<p><img src="https://s2.loli.net/2025/07/31/5UC3mzSbB9LaFjx.png" alt="备份测试"></p>
+<pre><code class="language-bash"># 手动触发备份测试
+# 在1Panel界面点击&quot;立即备份&quot;按钮
+
+# 验证备份文件
+ls -la /app/backup/database/
+# 应该看到类似文件：
+# IoT-Platform-DB_20250731_020000.sql.gz
+</code></pre>
+</li>
+</ol>
+<p><strong>第四步：配置自动备份与恢复</strong></p>
+<ol start="7">
+<li><p><strong>启用自动备份监控</strong></p>
+<p><img src="https://s2.loli.net/2025/07/31/QUTvLeSkjV45nx9.png" alt="自动备份监控"></p>
+<p><strong>监控配置：</strong></p>
+<pre><code class="language-yaml">备份状态监控: &quot;启用&quot;
+失败通知: &quot;邮件 + 系统通知&quot;
+存储空间监控: &quot;启用&quot;
+备份完整性检查: &quot;启用&quot;
+</code></pre>
+</li>
+</ol>
+<h4>🔄 备份恢复操作</h4>
+<p><strong>快速恢复步骤：</strong></p>
+<pre><code class="language-bash"># 1. 停止应用服务（避免数据冲突）
+docker-compose stop fengiot
+
+# 2. 通过1Panel界面选择备份文件进行恢复（建议使用页面操作，命令因不同版本可能有不一致的情况）
+# 或使用命令行恢复：
+gunzip -c /app/backup/database/IoT-Platform-DB_20250731_020000.sql.gz | \
+docker exec -i postgresql psql -U postgres -d FengCloudIotV5
+
+# 3. 验证数据恢复
+docker exec -it postgresql psql -U postgres -d FengCloudIotV5 -c &quot;SELECT COUNT(*) FROM users;&quot;
+
+# 4. 重启应用服务
+docker-compose start fengiot
+</code></pre>
+<h4>📊 备份性能优化</h4>
+<p><strong>高级配置选项：</strong></p>
+<pre><code class="language-yaml"># 1Panel高级备份配置
+backup_config:
+  # 并行备份线程数
+  parallel_jobs: 4
+
+  # 压缩级别 (1-9, 9为最高压缩)
+  compression_level: 6
+
+  # 备份分片大小 (适用于大型数据库)
+  chunk_size: &quot;100MB&quot;
+
+  # 网络传输优化
+  network_timeout: 300
+
+  # 内存使用限制
+  memory_limit: &quot;512MB&quot;
+</code></pre>
+<h4>⚠️ 重要注意事项</h4>
+<blockquote>
+<p><strong>🔐 安全建议</strong></p>
+<ul>
+<li>定期测试备份文件的完整性和可恢复性</li>
+<li>备份文件建议加密存储，防止数据泄露</li>
+<li>设置异地备份，提高数据安全性</li>
+<li>监控备份任务执行状态，及时处理异常</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>💡 最佳实践</strong></p>
+<ul>
+<li>生产环境建议配置主从备份策略</li>
+<li>重要操作前手动创建备份点</li>
+<li>定期清理过期备份文件，释放存储空间</li>
+<li>建立备份恢复演练机制</li>
+</ul>
+</blockquote>
+<blockquote>
+<p><strong>🔐 安全提示</strong><br>安装完成后请及时修改默认密码，并配置SSL证书</p>
+</blockquote>
+<h3>3. 安装 EMQX 消息代理</h3>
+<pre><code class="language-bash"># 添加EMQX仓库
+curl -s https://assets.emqx.com/scripts/install-emqx-deb.sh | sudo bash
+
+# 安装EMQX
+sudo apt install -y emqx
+
+# 启动并设置开机自启
+sudo systemctl start emqx
+sudo systemctl enable emqx
+
+# 验证服务状态
+sudo systemctl status emqx
+</code></pre>
+<p><strong>EMQX 配置：</strong></p>
+<pre><code class="language-bash"># 访问EMQX Dashboard
+# URL: http://your-server-ip:18083
+# 默认用户名: admin
+# 默认密码: public
+</code></pre>
+<blockquote>
+<p><strong>⚠️ 重要</strong><br>⚠️请在Dashboard中生成HTTP API密钥，记录Key和Secret，后续配置需要使用</p>
+</blockquote>
+<h3>4. 安装 TDengine 时序数据库</h3>
+<blockquote>
+<p><strong>🆕 v5.3.0 新增功能</strong><br>自动化脚本支持本地安装和在线安装两种方式，并支持动态版本号检测。</p>
+</blockquote>
+<h4>🤖 使用自动化脚本安装（推荐）</h4>
+<pre><code class="language-bash"># 使用安装脚本自动安装TDengine
+./install_iot_platform.sh
+
+# 在安装过程中选择TDengine安装方式：
+# 1) 本地安装 (使用已下载的安装包)
+# 2) 在线安装 (自动下载最新版本)
+</code></pre>
+<p><strong>本地安装方式：</strong></p>
+<ol>
+<li>将TDengine安装包放置到 <code>/app/</code> 目录</li>
+<li>支持的文件名格式：<ul>
+<li><code>TDengine-server-版本号-Linux-x64.tar.gz</code></li>
+<li><code>TDengine-client-版本号-Linux-x64.tar.gz</code></li>
+</ul>
+</li>
+<li>脚本自动检测版本号并安装</li>
+<li>安装过程中需要用户手动确认配置选项</li>
+</ol>
+<p><strong>在线安装方式：</strong></p>
+<ul>
+<li>可选择下载指定版本或使用默认版本</li>
+<li>需要稳定的网络连接</li>
+<li>自动完成服务端和客户端下载和安装</li>
+<li>安装过程中需要用户手动确认配置选项</li>
+</ul>
+<h4>📋 手动安装方式（备选）</h4>
+<p><strong>方式一：在线下载安装</strong></p>
+<pre><code class="language-bash"># 在线下载TDengine安装包
+cd /app
+wget https://www.taosdata.com/assets-download/3.0/TDengine-server-3.3.6.13-Linux-x64.tar.gz
+tar -xzf TDengine-server-3.3.6.13-Linux-x64.tar.gz
+
+# 安装TDengine服务端
+cd TDengine-server-3.3.6.13
+# 执行安装脚本，按提示进行交互
+# 1. 集群节点地址：直接按回车使用默认设置
+# 2. 邮箱地址：可输入邮箱或直接按回车跳过
+sudo ./install.sh
+
+# 启动TDengine服务
+sudo systemctl start taosd
+sudo systemctl enable taosd
+
+# 启动全部服务（重要步骤）
+sudo start-all.sh
+
+# 验证安装
+taos -s &quot;show databases;&quot;
+
+# 检查服务状态
+sudo systemctl status taosd
+</code></pre>
+<p><strong>方式二：离线安装</strong></p>
+<pre><code class="language-bash"># 1. 将安装包上传到服务器的 /app/ 目录
+# 2. 解压安装包
+cd /app
+tar -xzf TDengine-server-版本号-Linux-x64.tar.gz
+
+# 3. 执行安装
+cd TDengine-server-版本号
+sudo ./install.sh
+
+# 4. 启动服务
+sudo systemctl start taosd
+sudo systemctl enable taosd
+</code></pre>
+<p><strong>安装TDengine客户端：</strong></p>
+<blockquote>
+<p><strong>⚠️ 重要提醒</strong><br>请确保客户端版本和服务端版本一致，避免兼容性问题。</p>
+</blockquote>
+<pre><code class="language-bash"># 下载客户端
+cd /app
+
+# 方式一：在线下载客户端
+wget https://www.taosdata.com/assets-download/3.0/TDengine-client-3.3.6.13-Linux-x64.tar.gz
+tar -xzf TDengine-client-3.3.6.13-Linux-x64.tar.gz
+
+# 方式二：手动上传客户端安装包
+
+# 将客户端复制到应用目录（重要步骤）
+cp -r TDengine-client-版本号 /app/cloudiot/
+
+# 注意：客户端通常不需要系统级安装，只需复制到应用目录即可
+# 如需系统级安装客户端：
+# cd TDengine-client-版本号
+# sudo ./install.sh
+</code></pre>
+<p><strong>🔍 版本兼容性检查：</strong></p>
+<pre><code class="language-bash"># 检查服务端版本
+taos --version
+
+# 检查客户端版本
+ls -la /app/cloudiot/TDengine-client-*
+
+# 确保版本号一致
+</code></pre>
+<h3>5. 安装 Docker 和 Docker Compose（自动安装）</h3>
+<blockquote>
+<p><strong>📝 说明</strong><br>Docker和Docker Compose用于容器化部署IoT Platform应用，脚本会自动安装。</p>
+</blockquote>
+<p><strong>自动安装过程：</strong></p>
+<ul>
+<li>使用官方安装脚本自动安装Docker</li>
+<li>自动安装最新版本的Docker Compose</li>
+<li>自动添加用户到docker组</li>
+<li>自动设置服务开机自启</li>
+</ul>
+<p><strong>验证安装：</strong></p>
+<pre><code class="language-bash"># 检查Docker版本
+docker --version
+
+# 检查Docker Compose版本
+docker-compose --version
+
+# 检查Docker服务状态
+sudo systemctl status docker
+
+# 测试Docker运行（可选）
+docker run hello-world
+</code></pre>
+<blockquote>
+<p><strong>⚠️ 重要提醒</strong><br>安装完成后需要重新登录或执行 <code>newgrp docker</code> 以使docker组权限生效。</p>
+</blockquote>
+<p><strong>💡 TDengine安装交互说明：</strong></p>
+<p>在执行 <code>sudo ./install.sh</code> 时，会出现以下交互提示：</p>
+<ol>
+<li><p><strong>集群节点配置</strong>：</p>
+<pre><code>Enter FQDN:port (like h1.taosdata.com:6030) of an existing TDengine cluster node to join
+OR leave it blank to build one:
+</code></pre>
+<ul>
+<li>如果是单机部署，直接按回车使用默认设置</li>
+<li>如果要加入现有集群，输入集群节点地址</li>
+</ul>
+</li>
+<li><p><strong>邮箱地址（可选）</strong>：</p>
+<pre><code>Enter your email address for priority support or enter empty to skip:
+</code></pre>
+<ul>
+<li>可以输入邮箱地址以获得优先支持</li>
+<li>或直接按回车跳过</li>
+</ul>
+</li>
+<li><p><strong>安装确认</strong>：</p>
+<pre><code>Please press enter to continue or Ctrl-C to abort
+</code></pre>
+<ul>
+<li>按回车继续安装</li>
+<li>或按Ctrl-C取消安装</li>
+</ul>
+</li>
+</ol>
+<h3>5. 安装 Nginx 反向代理</h3>
+<pre><code class="language-bash"># 安装Nginx
+sudo apt install -y nginx
+
+# 启动并设置开机自启
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+# 验证安装
+nginx -v
+sudo systemctl status nginx
+</code></pre>
+<h3>6. 安装 Docker 和 Docker Compose</h3>
+<pre><code class="language-bash"># 这一步骤如果安装1panel可忽略，1panel安装选择更新，并且docker容器加速即可
+# 安装Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# 添加用户到docker组
+sudo usermod -aG docker $USER
+newgrp docker
+
+# 安装Docker Compose
+sudo curl -L &quot;https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)&quot; -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# 验证安装
+docker --version
+docker-compose --version
+</code></pre>
+<hr>
+<h2>⚙️ 系统配置</h2>
+<h3>1. Nginx 配置</h3>
+<p>创建IoT Platform的Nginx配置文件：</p>
+<pre><code class="language-bash">sudo vim /etc/nginx/conf.d/cloudiothtml.conf
+</code></pre>
+<pre><code class="language-nginx">server {
+    listen 9004;
+    server_name localhost;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection &quot;upgrade&quot;;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    add_header &#39;Access-Control-Allow-Origin&#39; &#39;*&#39;;
+    add_header &#39;Access-Control-Allow-Methods&#39; &#39;OPTIONS, GET, POST&#39;;
+    add_header &#39;Access-Control-Allow-Headers&#39; &#39;DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Authorization&#39;;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    
+    location /api/File/Image/annexpic/ {
+        alias /app/cloudiot/Upload/SystemFile/;
+        autoindex on;
+    }
+
+    location  /api/File/Image/annex/ {
+        alias /app/cloudiot/Upload/SystemFile/;
+        autoindex on;
+    }
+
+    location /api/ {
+        rewrite ^/api/(.*) /$1 break;
+        proxy_pass http://172.17.0.1:9081;
+    }
+    location /avatar/ {
+		alias  /app/cloudiot/Upload/Avatar/;
+        autoindex on;
+        
+    }
+    location /webhook/ {
+		rewrite ^/(.*) /$1 break;
+        proxy_pass http://172.17.0.1:9081;
+    }
+    location /device  {   
+    	proxy_pass http://127.0.0.1:9081/device;        #通过配置端口指向部署websocker的项目
+    	proxy_http_version 1.1;    
+    	proxy_set_header Upgrade $http_upgrade;    
+    	proxy_set_header Connection &quot;Upgrade&quot;;    
+    	proxy_set_header X-real-ip $remote_addr;
+    	proxy_set_header X-Forwarded-For $remote_addr;
+    }
+    location /mes {
+    	root /app/cloudiothtml/;
+		try_files $uri /index.html;
+		index index.html index.htm;
+    }   
+    location / {
+       	root   /app/cloudiothtml/;
+       	try_files $uri /index.html;
+       	index  index.html index.htm;
+    }
+}
+</code></pre>
+<pre><code class="language-bash"># 测试配置并重载
+sudo nginx -t
+sudo systemctl reload nginx
+</code></pre>
+<h3>2. Docker Compose 配置</h3>
+<blockquote>
+<p><strong>🆕 v5.3.0 新增内容</strong><br>本节新增了YAML语法规范说明、FengIoT服务详细配置解析和部署前检查机制，帮助用户避免常见配置错误。</p>
+</blockquote>
+<h4>🆕 YAML语法规范说明</h4>
+<blockquote>
+<p><strong>📋 新增说明</strong><br>为减少部署过程中的配置错误，特别添加YAML语法规范和常见错误示例。</p>
+</blockquote>
+<p>在编辑Docker Compose配置文件时，请严格遵循以下YAML语法规范：</p>
+<p><strong>基本语法规则：</strong></p>
+<ul>
+<li>使用<strong>空格</strong>进行缩进，<strong>禁止使用Tab键</strong></li>
+<li>缩进层级必须一致，推荐使用2个空格</li>
+<li>键值对格式：<code>key: value</code>（冒号后必须有空格）</li>
+<li>字符串包含特殊字符时需要用引号包围</li>
+<li>列表项使用 <code>-</code> 开头，后面跟一个空格</li>
+</ul>
+<p><strong>🆕 常见错误示例：</strong></p>
+<pre><code class="language-text"># ❌ 错误：使用Tab缩进
+services:
+    db:
+        image: postgres
+
+# ❌ 错误：冒号后没有空格
+services:
+  db:
+    image:postgres
+
+# ❌ 错误：缩进不一致
+services:
+  db:
+    image: postgres
+      restart: always
+
+# ✅ 正确格式
+services:
+  db:
+    image: postgres
+    restart: always
+</code></pre>
+<h4>创建Docker Compose配置文件</h4>
+<pre><code class="language-bash"># 创建配置文件
+vim /app/docker-compose.yml
+</code></pre>
+<h4>🗄️ 数据库配置选择</h4>
+<blockquote>
+<p><strong>📋 配置说明</strong><br>系统支持PostgreSQL和MySQL两种数据库，请根据实际需求选择其中一种进行配置。</p>
+</blockquote>
+<p><strong>数据库对比表：</strong></p>
+<table>
+<thead>
+<tr>
+<th>特性</th>
+<th>PostgreSQL（推荐）</th>
+<th>MySQL</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>性能</strong></td>
+<td>高并发性能优秀</td>
+<td>读取性能优秀</td>
+</tr>
+<tr>
+<td><strong>数据类型</strong></td>
+<td>支持丰富的数据类型</td>
+<td>标准SQL数据类型</td>
+</tr>
+<tr>
+<td><strong>扩展性</strong></td>
+<td>优秀的扩展能力</td>
+<td>良好的扩展能力</td>
+</tr>
+<tr>
+<td><strong>社区支持</strong></td>
+<td>活跃的开源社区</td>
+<td>广泛的社区支持</td>
+</tr>
+<tr>
+<td><strong>容器镜像</strong></td>
+<td>postgres:15.3</td>
+<td>mysql:8.4.3</td>
+</tr>
+<tr>
+<td><strong>默认端口</strong></td>
+<td>5432</td>
+<td>3310</td>
+</tr>
+<tr>
+<td><strong>用户名</strong></td>
+<td>postgres</td>
+<td>root</td>
+</tr>
+<tr>
+<td><strong>推荐场景</strong></td>
+<td>复杂查询、高并发</td>
+<td>简单应用、快速部署</td>
+</tr>
+</tbody></table>
+<h5>方案一：PostgreSQL数据库配置（推荐）</h5>
+<p><strong>完整配置文件：</strong></p>
+<pre><code class="language-yaml">version: &quot;3.9&quot;
+services:
+  # PostgreSQL数据库服务
+  db:
+    image: postgres:15.3
+    container_name: postgresql
+    restart: always
+    volumes:
+      - /home/data/postgresql:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: &quot;Fh@201001.&quot;
+      POSTGRES_DB: postgres
+      TZ: Asia/Shanghai
+      POSTGRES_INITDB_ARGS: &quot;--encoding=UTF8&quot;
+    ports:
+      - 5432:5432
+
+  # Redis缓存服务
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    volumes:
+      - /home/data/redis:/data
+      - ./config/redis/redis.conf:/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    command:
+      redis-server /etc/redis/redis.conf --requirepass Fh@201001. --appendonly yes
+
+  # IoT Platform主应用服务
+  fengiot:
+    image: fengiot/cloud
+    container_name: cloudiotv1
+    build:
+      context: /app/cloudiot/
+      dockerfile: /app/cloudiot/Dockerfile
+    restart: always
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - /app/cloudiot/:/app/cloudiot/
+      - /app/Upload/:/app/Upload/
+    ports:
+      - &quot;9081:9081&quot;
+    links:
+      - db
+      - redis
+    environment:
+      TZ: Asia/Shanghai
+</code></pre>
+<h5>方案二：MySQL数据库配置（可选）</h5>
+<p><strong>如需使用MySQL，请将上述配置中的db服务替换为：</strong></p>
+<pre><code class="language-yaml">version: &quot;3.9&quot;
+services:
+  # MySQL数据库服务
+  db:
+    image: mysql:8.4.3
+    container_name: mysql8
+    restart: always
+    volumes:
+      - /home/data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: &quot;Fh@201001.&quot;
+      TZ: Asia/Shanghai
+    ports:
+      - 3310:3306
+    command:
+      --mysql_native_password=ON
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+      --skip-log-bin
+
+  # Redis缓存服务（与PostgreSQL方案相同）
+  redis:
+    image: redis
+    container_name: redis
+    restart: always
+    volumes:
+      - /home/data/redis:/data
+      - ./config/redis/redis.conf:/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    command:
+      redis-server /etc/redis/redis.conf --requirepass Fh@201001. --appendonly yes
+
+  # IoT Platform主应用服务（与PostgreSQL方案相同）
+  fengiot:
+    image: fengiot/cloud
+    container_name: cloudiotv1
+    build:
+      context: /app/cloudiot/
+      dockerfile: /app/cloudiot/Dockerfile
+    restart: always
+    depends_on:
+      - db
+      - redis
+    volumes:
+      - /app/cloudiot/:/app/cloudiot/
+      - /app/Upload/:/app/Upload/
+    ports:
+      - &quot;9081:9081&quot;
+    links:
+      - db
+      - redis
+    environment:
+      TZ: Asia/Shanghai
+</code></pre>
+<h4>🆕 FengIoT服务详细说明</h4>
+<blockquote>
+<p><strong>📋 新增说明</strong><br>详细解析FengIoT服务配置项，明确必需文件和前置检查要求。</p>
+</blockquote>
+<p><strong>🆕 服务配置解析：</strong></p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>说明</th>
+<th>是否必需</th>
+<th>🆕 备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>image: fengiot/cloud</code></td>
+<td>Docker镜像名称</td>
+<td>✅ 必需</td>
+<td>确保镜像已构建或可拉取</td>
+</tr>
+<tr>
+<td><code>container_name: cloudiotv1</code></td>
+<td>容器名称，便于管理</td>
+<td>✅ 必需</td>
+<td>避免与现有容器名冲突</td>
+</tr>
+<tr>
+<td><code>build.context</code></td>
+<td>构建上下文路径</td>
+<td>✅ 必需</td>
+<td>必须包含应用程序文件</td>
+</tr>
+<tr>
+<td><code>build.dockerfile</code></td>
+<td>Dockerfile文件路径</td>
+<td>✅ 必需</td>
+<td>确保Dockerfile存在且可执行</td>
+</tr>
+<tr>
+<td><code>depends_on</code></td>
+<td>服务依赖关系</td>
+<td>✅ 必需</td>
+<td>确保数据库和缓存先启动</td>
+</tr>
+<tr>
+<td><code>volumes</code></td>
+<td>数据卷挂载</td>
+<td>✅ 必需</td>
+<td>持久化数据和配置文件</td>
+</tr>
+<tr>
+<td><code>ports</code></td>
+<td>端口映射</td>
+<td>✅ 必需</td>
+<td>确保端口未被占用</td>
+</tr>
+</tbody></table>
+<p><strong>🆕 必需文件检查清单：</strong></p>
+<p>在启动fengiot服务前，请确保以下文件和目录存在：</p>
+<pre><code class="language-bash"># 1. 应用程序文件（必需）
+/app/cloudiot/IotPlatform.dll              # 主程序文件
+/app/cloudiot/Dockerfile                   # Docker构建文件
+/app/cloudiot/Configuration/               # 配置文件目录
+
+# 2. 配置文件（必需）
+/app/cloudiot/Configuration/Database.json  # 数据库配置
+/app/cloudiot/Configuration/Cache.json     # 缓存配置
+/app/cloudiot/Configuration/App.json       # 应用配置
+
+# 3. TDengine客户端（必需）
+/app/cloudiot/TDengine-client-版本号/       # TDengine客户端目录
+# 支持动态版本号检测，如：TDengine-client-3.3.6.13
+# 自动化脚本会自动处理版本号匹配
+
+# 4. 数据目录（必需）
+/app/Upload/                               # 文件上传目录
+/app/cloudiot/Upload/                      # 应用上传目录
+
+
+# 常见问题
+# 一 目录不了解问题
+# 1./app/cloudiot 目录内容怎么来，默认提供一个版本的文件，可直接使用，如有新版本可通过禅道/云平台等方式自行下载对应的安装包
+# 2./app/Upload/  目录在cloudiot程序启动后自动生成
+# 3./app/cloudiot/TDengine-client-3.3.6.13/ 如何来， 通过上传的压缩包解压后移动到/app/cloudiot 目录下即可
+</code></pre>
+<h4>🆕 部署前检查机制</h4>
+<blockquote>
+<p><strong>🔧 新增功能</strong><br>提供自动化检查脚本，确保部署环境满足所有要求。</p>
+</blockquote>
+<p><strong>创建部署前检查脚本：</strong></p>
+<h4>配置文件验证工具</h4>
+<blockquote>
+<p><strong>🔧 新增功能</strong><br>提供配置文件语法验证和错误排查工具。</p>
+</blockquote>
+<p><strong>常见配置错误及解决方案：</strong></p>
+<table>
+<thead>
+<tr>
+<th>错误类型</th>
+<th>错误信息</th>
+<th>🆕 解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>语法错误</td>
+<td><code>yaml: line X: mapping values are not allowed</code></td>
+<td>检查冒号后是否有空格</td>
+</tr>
+<tr>
+<td>缩进错误</td>
+<td><code>yaml: line X: found character that cannot start any token</code></td>
+<td>统一使用空格缩进，不要混用Tab</td>
+</tr>
+<tr>
+<td>路径错误</td>
+<td><code>build context path does not exist</code></td>
+<td>确认构建上下文路径存在</td>
+</tr>
+<tr>
+<td>端口冲突</td>
+<td><code>port is already allocated</code></td>
+<td>检查端口占用，修改端口映射</td>
+</tr>
+<tr>
+<td>权限错误</td>
+<td><code>permission denied</code></td>
+<td>检查目录权限，执行 <code>sudo chmod -R 755</code></td>
+</tr>
+</tbody></table>
+<h4>部署最佳实践</h4>
+<blockquote>
+<p><strong>📋 新增建议</strong><br>基于实际部署经验总结的最佳实践指南。</p>
+</blockquote>
+<p>** 推荐部署流程：**</p>
+<ol>
+<li><strong>分步部署</strong>：先启动基础服务（db、redis），再启动应用服务</li>
+<li><strong>日志监控</strong>：使用 <code>docker-compose logs -f</code> 实时查看启动日志</li>
+<li><strong>健康检查</strong>：部署完成后执行健康检查脚本</li>
+<li><strong>备份配置</strong>：部署前备份现有配置文件</li>
+</ol>
+<pre><code class="language-bash">#  分步启动示例
+sudo docker-compose up -d db redis    # 先启动基础服务
+
+# 这一步前请确认tdengine-client 是否解压，并且确定已经将该client目录文件移动到cloutiod目录下
+# 如果未移动请先执行移动命令
+sudo cp -r &lt;TDeng-client&gt; cloutiot/
+# 请确保cloudiot目录下存在tdeng-client 以及Dockerfile文件存在
+sudo docker-compose up -d fengiot     # 启动应用服务
+</code></pre>
+<blockquote>
+<p><strong>⚠️ v5.3.0 重要提醒</strong><br>本版本新增的检查机制和配置验证可以显著降低部署失败率，强烈建议在正式部署前执行所有检查步骤。</p>
+</blockquote>
+<h3>3. 应用配置文件</h3>
+<h4>Dockerfile配置 (<code>/app/cloudiot/Dockerfile</code>)</h4>
+<pre><code class="language-text">#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+
+#FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+WORKDIR /app/cloudiot
+EXPOSE 80
+EXPOSE 443
+EXPOSE 9081
+
+COPY . .
+# TDengine连接客户端 
+# --------------------注意：随着TDengine版本升级，此处配置版本号请和client文件版本保持一致
+COPY TDengine-client-3.3.6.13 /app/TDengine-client-3.3.6.13
+RUN  chmod -R 777 /app/TDengine-client-3.3.6.13
+
+# 直接执行TDengine安装指令（替代原脚本）
+RUN cd /app/TDengine-client-3.3.6.13 &amp;&amp; ./install_client.sh
+
+ENTRYPOINT &quot;dotnet&quot;, &quot;IotPlatform.dll&quot;]
+</code></pre>
+<h4></h4>
+<h4>🗄️ 数据库连接配置 (<code>/app/cloudiot/Configuration/Database.json</code>)</h4>
+<blockquote>
+<p><strong>📋 配置说明</strong><br>根据前面选择的数据库类型（PostgreSQL或MySQL），配置对应的连接参数。</p>
+</blockquote>
+<h5>方案一：PostgreSQL数据库连接配置（推荐）</h5>
+<pre><code class="language-json">{
+  &quot;ConnectionStrings&quot;: {
+    &quot;EnableConsoleSql&quot;: false,
+    &quot;ConnectionConfigs&quot;: [
+      {
+        &quot;ConfigId&quot;: &quot;1300000000001&quot;,
+        &quot;DBName&quot;: &quot;FengCloudIotV5&quot;,
+        &quot;DBType&quot;: &quot;PostgreSQL&quot;,
+        &quot;Host&quot;: &quot;172.17.0.1&quot;,
+        &quot;Port&quot;: &quot;5432&quot;,
+        &quot;UserName&quot;: &quot;postgres&quot;,
+        &quot;Password&quot;: &quot;Fh@201001.&quot;,
+        &quot;DBSchema&quot;: &quot;public&quot;,
+        &quot;EnableInitTable&quot;: false,   // 首次启动需要设置true
+        &quot;EnableInitSeed&quot;: false     // 首次启动需要设置true
+      },
+      {
+        &quot;ConfigId&quot;: &quot;16545203149510&quot;,
+        &quot;DBName&quot;: &quot;CloudDataModeling&quot;,
+        &quot;DBType&quot;: &quot;PostgreSQL&quot;,
+        &quot;Host&quot;: &quot;172.17.0.1&quot;,
+        &quot;Port&quot;: &quot;5432&quot;,
+        &quot;UserName&quot;: &quot;postgres&quot;,
+        &quot;Password&quot;: &quot;Fh@201001.&quot;,
+        &quot;DBSchema&quot;: &quot;public&quot;,
+        &quot;EnableInitTable&quot;: false,   // 首次启动需要设置true
+        &quot;EnableInitSeed&quot;: false     // 首次启动需要设置true
+      }
+    ]
+  }
+}
+</code></pre>
+<h5>方案二：MySQL数据库连接配置</h5>
+<pre><code class="language-json">{
+  &quot;ConnectionStrings&quot;: {
+    &quot;EnableConsoleSql&quot;: false,
+    &quot;ConnectionConfigs&quot;: [
+      {
+        &quot;ConfigId&quot;: &quot;1300000000001&quot;,
+        &quot;DBName&quot;: &quot;FengCloudIotV5&quot;,
+        &quot;DBType&quot;: &quot;MySql&quot;,
+        &quot;Host&quot;: &quot;172.17.0.1&quot;,
+        &quot;Port&quot;: &quot;3310&quot;,
+        &quot;UserName&quot;: &quot;root&quot;,
+        &quot;Password&quot;: &quot;Fh@201001.&quot;,
+        &quot;DBSchema&quot;: &quot;public&quot;,
+        &quot;EnableInitTable&quot;: true,    // 首次启动需要设置true
+        &quot;EnableInitSeed&quot;: false     // 首次启动需要设置true
+      },
+      {
+        &quot;ConfigId&quot;: &quot;16545203149510&quot;,
+        &quot;DBName&quot;: &quot;CloudDataModeling&quot;,
+        &quot;DBType&quot;: &quot;MySql&quot;,
+        &quot;Host&quot;: &quot;172.17.0.1&quot;,
+        &quot;Port&quot;: &quot;3310&quot;,
+        &quot;UserName&quot;: &quot;root&quot;,
+        &quot;Password&quot;: &quot;Fh@201001.&quot;,
+        &quot;DBSchema&quot;: &quot;public&quot;,
+        &quot;EnableInitTable&quot;: false,   // 首次启动需要设置true
+        &quot;EnableInitSeed&quot;: false     // 首次启动需要设置true
+      }
+    ]
+  }
+}
+</code></pre>
+<blockquote>
+<p><strong>⚠️ 重要提醒</strong></p>
+<ul>
+<li><strong>首次部署</strong>：请将 <code>EnableInitTable</code> 和 <code>EnableInitSeed</code> 设置为 <code>true</code></li>
+<li><strong>后续启动</strong>：请将这两个参数改回 <code>false</code>，避免重复初始化</li>
+<li><strong>数据库类型</strong>：确保 <code>DBType</code> 与实际使用的数据库类型一致</li>
+<li><strong>端口配置</strong>：PostgreSQL使用5432端口，MySQL使用3310端口</li>
+</ul>
+</blockquote>
+<h4>TDengine配置 (<code>/app/cloudiot/Configuration/Database.json</code>)</h4>
+<pre><code class="language-text">&quot;TDengine&quot;: {
+    &quot;Connection&quot;: &quot;Host=172.17.0.1;Port=6030;Username=root;Password=taosdata;Database=cloudIot&quot; 
+}
+</code></pre>
+<h4>缓存配置 (<code>/app/cloudiot/Configuration/Cache.json</code>)</h4>
+<pre><code class="language-text">{
+  &quot;$schema&quot;: &quot;https://gitee.com/dotnetchina/Furion/raw/v4/schemas/v4/furion-schema.json&quot;,
+
+  &quot;Cache&quot;: {
+    &quot;Prefix&quot;: &quot;fengIot_&quot;, // 全局缓存前缀
+    &quot;CacheType&quot;: &quot;Redis&quot;, // Memory、Redis
+    &quot;Redis&quot;: {
+      &quot;Configuration&quot;: &quot;server=172.17.0.1:6379;password=Fh@201001.;db=5;&quot;, // Redis连接字符串
+      &quot;Prefix&quot;: &quot;fengIot_&quot;, // Redis前缀（目前没用）
+      &quot;MaxMessageSize&quot;: &quot;3145728&quot; // 最大消息大小 默认1024 * 1024 *3
+    }
+  }
+}
+</code></pre>
+<h4>EMQX配置 (<code>/app/cloudiot/Configuration/Database.json</code>)</h4>
+<pre><code class="language-text"> &quot;Mqtt&quot;: {
+    &quot;Ip&quot;: &quot;172.17.0.1&quot;,
+    &quot;Port&quot;: 1883,
+    &quot;UserName&quot;: &quot;admin&quot;,
+    &quot;Password&quot;: &quot;fengedge&quot;,
+    &quot;Version&quot;: &quot;v5&quot;,
+    &quot;ApiKey&quot;: &quot;4eaaa5c3e882376b&quot;,
+    &quot;SecretKey&quot;: &quot;CbLw75OuH9A3s4KiCrl9AXeUc4sKr1zApf8PIHxEZxEKE&quot;
+  }
+</code></pre>
+<hr>
+<h2>🚀 部署验证</h2>
+<h3>🆕1. 启动服务</h3>
+<pre><code class="language-bash"># 启动Docker服务
+cd /app
+docker-compose up --build -d
+
+# docker慢的问题，可配置镜像加速
+# 提供一个地址，如还是慢可以查询其他地址配置，配置方式可自行搜索
+https://docker.xuanyuan.me
+
+# 查看服务状态
+docker-compose ps
+docker-compose logs -f iotplatform
+
+#  🆕 排查服务问题时，可以单个构建启动，排查问题尽量不使用-d 后台运行参数
+docker-compose up --build fengiot
+</code></pre>
+<h3>2. 健康检查</h3>
+<pre><code class="language-bash"># 检查应用端口
+netstat -tlnp | grep :9081
+
+# 检查PostgreSQL数据库连接（&lt;52352f82cefc&gt; 是容器id，根据实际替换）
+docker exec -it postgresql psql -U postgres -d FengCloudIotV5 -c &quot;SELECT version();&quot;
+# 返回version信息则正确
+
+# 检查MySQL数据库连接（如使用MySQL）
+docker exec -it mysql8 mysql -u root -p&quot;Fh@201001.&quot; -e &quot;SELECT VERSION();&quot;
+# 返回version信息则正确
+
+# 检查Redis连接
+docker exec -it ffa62ebebb28 redis-cli -a &quot;Fh@201001.&quot; ping
+# 返回PONG响应则正确
+
+# 检查TDengine连接
+taos -s &quot;show databases;&quot;
+# 返回数据库内容则正确
+
+# 检查EMQX状态
+curl -u admin:public http://localhost:18083/api/v5/nodes
+# 返回内容大概提示Check api_key/api_secret 或者BAD_API_KEY_OR_SECRET 之类的关键字则正确 
+</code></pre>
+<h3>3. 日志检查</h3>
+<pre><code class="language-bash"># 查看应用日志，替换实际容器id
+docker-compose logs iotplatform
+
+# 查看系统日志
+tail -f /app/logs/*.log
+
+# 查看Nginx日志
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+</code></pre>
+<hr>
+<h2>🌐 网络问题解决方案</h2>
+<h3>Docker安装网络问题</h3>
+<p><strong>问题描述：</strong></p>
+<pre><code>curl: (35) OpenSSL SSL_connect: Connection reset by peer in connection to download.docker.com:443
+</code></pre>
+<p>这是Docker安装过程中最常见的网络问题，通常由以下原因引起：</p>
+<ul>
+<li>DNS解析问题</li>
+<li>网络连接不稳定</li>
+<li>SSL证书问题</li>
+<li>防火墙或代理设置</li>
+</ul>
+<h3>🛠️ 解决方案</h3>
+<h4>方案一：使用自动化网络修复工具（推荐）</h4>
+<pre><code class="language-bash"># 运行网络修复工具
+./fix_network_issues.sh
+
+# 选择相应的修复选项：
+# 1) 网络连接诊断 - 检查网络状态
+# 2) 修复DNS问题 - 更换DNS服务器
+# 3) 配置HTTP代理 - 企业网络环境
+# 4) 更新CA证书 - 修复SSL问题
+# 5) 修复系统时间 - 同步系统时间
+# 6) 使用国内镜像源安装Docker - 绕过网络问题
+# 7) 全面修复 - 自动执行所有修复步骤
+</code></pre>
+<h4>方案二：手动修复步骤</h4>
+<p><strong>1. 诊断网络问题</strong></p>
+<pre><code class="language-bash"># 检查DNS解析
+nslookup download.docker.com
+
+# 检查网络连通性
+ping -c 3 8.8.8.8
+
+# 检查HTTPS连接
+curl -I --connect-timeout 10 https://download.docker.com
+
+# 检查系统时间
+date
+</code></pre>
+<p><strong>2. 修复DNS问题</strong></p>
+<pre><code class="language-bash"># 备份原DNS配置
+sudo cp /etc/resolv.conf /etc/resolv.conf.backup
+
+# 方案A：使用Google DNS
+sudo tee /etc/resolv.conf &gt; /dev/null &lt;&lt;EOF
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+EOF
+
+# 方案B：使用阿里DNS（国内推荐）
+sudo tee /etc/resolv.conf &gt; /dev/null &lt;&lt;EOF
+nameserver 223.5.5.5
+nameserver 223.6.6.6
+EOF
+
+# 方案C：使用腾讯DNS
+sudo tee /etc/resolv.conf &gt; /dev/null &lt;&lt;EOF
+nameserver 119.29.29.29
+nameserver 182.254.116.116
+EOF
+</code></pre>
+<p><strong>3. 更新CA证书</strong></p>
+<pre><code class="language-bash">sudo apt-get update
+sudo apt-get install -y ca-certificates
+sudo update-ca-certificates
+</code></pre>
+<p><strong>4. 同步系统时间</strong></p>
+<pre><code class="language-bash">sudo apt-get install -y ntp ntpdate
+sudo ntpdate -s time.nist.gov
+sudo systemctl start ntp
+sudo systemctl enable ntp
+</code></pre>
+<p><strong>5. 使用国内镜像源安装Docker</strong></p>
+<pre><code class="language-bash"># 在安装脚本中选择&quot;国内镜像源安装&quot;
+# 或手动执行以下命令：
+
+# 更新包索引
+sudo apt-get update
+
+# 安装必要的包
+sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+
+# 添加阿里云Docker GPG密钥
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+
+# 设置阿里云Docker仓库
+echo &quot;deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable&quot; | sudo tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+
+# 更新包索引并安装Docker
+sudo apt-get update
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+</code></pre>
+<h4>方案三：配置HTTP代理（企业网络环境）</h4>
+<pre><code class="language-bash"># 设置临时代理
+export http_proxy=http://proxy.company.com:8080
+export https_proxy=http://proxy.company.com:8080
+
+# 设置永久代理
+sudo tee /etc/environment &gt; /dev/null &lt;&lt;EOF
+http_proxy=&quot;http://proxy.company.com:8080&quot;
+https_proxy=&quot;http://proxy.company.com:8080&quot;
+HTTP_PROXY=&quot;http://proxy.company.com:8080&quot;
+HTTPS_PROXY=&quot;http://proxy.company.com:8080&quot;
+no_proxy=&quot;localhost,127.0.0.1,::1&quot;
+NO_PROXY=&quot;localhost,127.0.0.1,::1&quot;
+EOF
+
+# 重新加载环境变量
+source /etc/environment
+</code></pre>
+<h3>🔍 网络问题预防</h3>
+<p><strong>1. 选择合适的安装方式</strong></p>
+<ul>
+<li>国外服务器：使用官方安装脚本</li>
+<li>国内服务器：使用国内镜像源</li>
+<li>企业网络：配置代理或使用内网镜像</li>
+</ul>
+<p><strong>2. 优化网络配置</strong></p>
+<ul>
+<li>使用稳定的DNS服务器</li>
+<li>保持系统时间同步</li>
+<li>定期更新CA证书</li>
+</ul>
+<p><strong>3. 网络环境检查</strong></p>
+<ul>
+<li>确保防火墙允许HTTPS连接</li>
+<li>检查代理设置是否正确</li>
+<li>验证网络连通性</li>
+</ul>
+<h2>🔧 故障排查</h2>
+<h3>常见问题及解决方案</h3>
+<h4>1. 应用无法启动</h4>
+<p><strong>问题现象：</strong></p>
+<pre><code>docker-compose up 失败，容器无法启动
+</code></pre>
+<p><strong>排查步骤：</strong></p>
+<pre><code class="language-bash"># 查看详细错误日志
+docker-compose logs iotplatform
+
+# 检查配置文件语法
+docker-compose config
+
+# 检查端口占用
+sudo netstat -tlnp | grep :9081
+</code></pre>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>检查配置文件格式是否正确</li>
+<li>确认端口未被占用</li>
+<li>验证数据库连接字符串</li>
+</ul>
+<h4>2. 数据库连接失败</h4>
+<p><strong>问题现象：</strong></p>
+<pre><code>Unable to connect to database
+</code></pre>
+<p><strong>排查步骤：</strong></p>
+<pre><code class="language-bash"># 检查PostgreSQL服务状态
+docker exec -it postgresql pg_isready
+
+# 测试PostgreSQL数据库连接
+docker exec -it postgresql psql -U postgres -d FengCloudIotV5
+
+# 检查MySQL服务状态（如使用MySQL）
+docker exec -it mysql8 mysqladmin -u root -p&quot;Fh@201001.&quot; ping
+
+# 测试MySQL数据库连接（如使用MySQL）
+docker exec -it mysql8 mysql -u root -p&quot;Fh@201001.&quot; -D FengCloudIotV5
+</code></pre>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>检查数据库服务是否正常运行</li>
+<li>验证用户名密码是否正确</li>
+<li>确认数据库已创建</li>
+<li>检查数据库类型配置是否与实际使用的数据库一致</li>
+<li>验证端口配置（PostgreSQL:5432，MySQL:3310）</li>
+</ul>
+<h4>3. EMQX连接问题</h4>
+<p><strong>问题现象：</strong></p>
+<pre><code>MQTT连接失败或设备无法上线
+</code></pre>
+<p><strong>排查步骤：</strong></p>
+<pre><code class="language-bash"># 检查EMQX服务状态
+sudo systemctl status emqx
+
+# 查看EMQX日志
+sudo journalctl -u emqx -f
+
+# 测试MQTT连接
+mosquitto_pub -h localhost -p 1883 -t test -m &quot;hello&quot;
+</code></pre>
+<h4>4. TDengine连接异常</h4>
+<p><strong>问题现象：</strong></p>
+<pre><code>时序数据无法写入或查询
+</code></pre>
+<p><strong>排查步骤：</strong></p>
+<pre><code class="language-bash"># 检查TDengine服务
+sudo systemctl status taosd
+
+# 测试连接
+taos -s &quot;show databases;&quot;
+
+# 检查客户端库
+ldconfig -p | grep taos
+</code></pre>
+<h3>性能优化建议（非必要操作）</h3>
+<h4>1. 数据库优化</h4>
+<pre><code class="language-sql">-- PostgreSQL性能调优
+ALTER SYSTEM SET shared_buffers = &#39;256MB&#39;;
+ALTER SYSTEM SET effective_cache_size = &#39;1GB&#39;;
+ALTER SYSTEM SET maintenance_work_mem = &#39;64MB&#39;;
+SELECT pg_reload_conf();
+</code></pre>
+<h4>2. Redis优化</h4>
+<pre><code class="language-bash"># 修改Redis配置
+echo &quot;maxmemory 512mb&quot; &gt;&gt; /etc/redis/redis.conf
+echo &quot;maxmemory-policy allkeys-lru&quot; &gt;&gt; /etc/redis/redis.conf
+sudo systemctl restart redis
+</code></pre>
+<h4>3. 系统优化</h4>
+<pre><code class="language-bash"># 增加文件描述符限制
+echo &quot;* soft nofile 65536&quot; &gt;&gt; /etc/security/limits.conf
+echo &quot;* hard nofile 65536&quot; &gt;&gt; /etc/security/limits.conf
+
+# 优化内核参数
+echo &quot;net.core.somaxconn = 65535&quot; &gt;&gt; /etc/sysctl.conf
+sysctl -p
+</code></pre>
+<hr>
+<h2>🛡️ 维护管理</h2>
+<p>安装todesk</p>
+<pre><code class="language-shel">#卸载：
+sudo apt-get remove --purge todesk
+# 下载
+wget https://dl.todesk.com/linux/todesk_4.7.1_amd64.deb
+# 安装
+sudo apt-get install ./todesk_4.7.1_amd64.deb
+# 运行
+todesk
+</code></pre>
+<h3>备份策略</h3>
+<h4>1. 数据库备份</h4>
+<pre><code class="language-bash">#!/bin/bash
+# 创建备份脚本 /app/scripts/backup_db.sh
+
+BACKUP_DIR=&quot;/app/backup&quot;
+DATE=$(date +%Y%m%d_%H%M%S)
+
+# PostgreSQL备份
+docker exec postgresql pg_dump -U postgres FengCloudIotV5 &gt; $BACKUP_DIR/postgres_$DATE.sql
+
+# MySQL备份（如使用MySQL）
+docker exec mysql8 mysqldump -u root -p&quot;Fh@201001.&quot; FengCloudIotV5 &gt; $BACKUP_DIR/mysql_$DATE.sql
+
+# 清理7天前的备份
+find $BACKUP_DIR -name &quot;postgres_*.sql&quot; -mtime +7 -delete
+
+echo &quot;Database backup completed: postgres_$DATE.sql&quot;
+</code></pre>
+<h4>2. 配置文件备份</h4>
+<pre><code class="language-bash">#!/bin/bash
+# 配置备份脚本 /app/scripts/backup_config.sh
+
+tar -czf /app/backup/config_$(date +%Y%m%d).tar.gz \
+  /app/cloudiot/Configuration/ \
+  /etc/nginx/conf.d/ \
+  /app/docker-compose.yml
+
+echo &quot;Configuration backup completed&quot;
+</code></pre>
+<h3>监控脚本</h3>
+<pre><code class="language-bash">#!/bin/bash
+# 健康检查脚本 /app/scripts/health_check.sh
+
+# 检查服务状态
+services=(&quot;iot_postgres&quot; &quot;iot_redis&quot; &quot;iot_platform&quot;)
+
+for service in &quot;${services[@]}&quot;; do
+    if ! docker ps | grep -q $service; then
+        echo &quot;❌ $service is not running&quot;
+        # 发送告警通知
+    else
+        echo &quot;✅ $service is running&quot;
+    fi
+done
+
+# 检查磁盘空间
+disk_usage=$(df /app | awk &#39;NR==2 {print $5}&#39; | sed &#39;s/%//&#39;)
+if [ $disk_usage -gt 80 ]; then
+    echo &quot;⚠️ Disk usage is ${disk_usage}%&quot;
+fi
+</code></pre>
+<h3>定期维护任务</h3>
+<pre><code class="language-bash"># 添加到crontab
+crontab -e
+
+# 每日凌晨2点备份数据库
+0 2 * * * /app/scripts/backup_db.sh
+
+# 每小时健康检查
+0 * * * * /app/scripts/health_check.sh
+
+# 每周清理日志
+0 0 * * 0 find /app/logs -name &quot;*.log&quot; -mtime +30 -delete
+</code></pre>
+<hr>
+<h2>📞 技术支持</h2>
+<p>如果在安装过程中遇到问题，请：</p>
+<ol>
+<li>📋 查看本文档的故障排查章节</li>
+<li>📝 收集相关日志信息</li>
+<li>🔍 检查系统资源使用情况</li>
+<li>📧 联系技术支持团队</li>
+</ol>
+<hr>
+<blockquote>
+<p><strong>📝 更新日志</strong><br>最后更新：2025年7月<br>版本：v5.3.0  </p>
+<p><strong>🔗 相关文档</strong>  </p>
+<ul>
+<li><a href="./Versions/">版本更新日志</a>  </li>
+<li><a href="../API/">API文档</a>  </li>
+<li><a href="../Development/">开发指南</a></li>
+</ul>
+</blockquote>
+<hr>
+<p><strong>🎉 安装完成！</strong></p>
+<p>恭喜您成功部署了IoT Platform物联网平台！现在您可以通过浏览器访问 <code>http://your-server-ip:9081</code> 开始使用系统。</p>
+
+  </div>
+  <script>
+(function () {
+  'use strict';
+
+  // ===== 1. 表格字号动态计算（与 gov 模板同一逻辑） =====
+  var MIN_FONT = 10.5;
+  var tables = document.querySelectorAll('.gov-container table');
+  for (var t = 0; t < tables.length; t++) {
+    var table = tables[t];
+    var cells = Array.prototype.slice.call(table.querySelectorAll('th, td'));
+    if (cells.length === 0) continue;
+
+    var current = parseFloat(window.getComputedStyle(table).fontSize) || 16;
+    if (current <= MIN_FONT) continue;
+    var avail = table.clientWidth;
+    if (avail <= 0) continue;
+
+    var originals = cells.map(function (c) { return c.style.whiteSpace; });
+    cells.forEach(function (c) { c.style.whiteSpace = 'nowrap'; });
+    var needWidth = table.scrollWidth;
+    cells.forEach(function (c, i) { c.style.whiteSpace = originals[i]; });
+
+    if (needWidth <= avail + 1) continue;
+    var target = current * (avail / needWidth) * 0.97;
+    target = Math.max(MIN_FONT, target);
+    table.style.fontSize = target + 'px';
+  }
+
+  // ===== 2. Mermaid 渲染（若有内嵌 mermaid.min.js 且存在未转图的 mermaid 代码块） =====
+  if (typeof window.mermaid !== 'undefined') {
+    var blocks = document.querySelectorAll('.gov-container pre code.language-mermaid');
+    if (blocks.length) {
+      try {
+        window.mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: 'PingFang SC, Microsoft YaHei UI, Noto Serif CJK SC, SimSun, sans-serif',
+          fontSize: 14,
+          flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+          sequence: { useMaxWidth: true, wrap: true },
+          gantt: { useMaxWidth: true },
+          journey: { useMaxWidth: true },
+          gitGraph: { useMaxWidth: true }
+        });
+      } catch (e) { /* 忽略 */ }
+
+      for (var i = 0; i < blocks.length; i++) {
+        (function (el, idx) {
+          var code = (el.textContent || '').trim();
+          var pre = el.closest('pre');
+          if (!code || !pre) return;
+          var chartId = 'gov-mermaid-' + Date.now() + '-' + idx;
+          window.mermaid.render(chartId, code).then(function (res) {
+            var wrapper = document.createElement('div');
+            wrapper.className = 'gov-mermaid';
+            wrapper.innerHTML = res.svg;
+            pre.parentNode.replaceChild(wrapper, pre);
+          }).catch(function (err) {
+            var errBox = document.createElement('div');
+            errBox.className = 'gov-mermaid-error';
+            errBox.textContent = 'Mermaid 渲染失败: ' + ((err && err.message) || err || '未知错误');
+            pre.parentNode.insertBefore(errBox, pre);
+          });
+        })(blocks[i], i);
+      }
+    }
+  }
+
+  // ===== 3. 图片点击放大（与 gov 模板 / Readmdvue 一致：双击图片 → 全屏模态框） =====
+  var modal = null;
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove('show');
+    setTimeout(function () { if (modal && modal.parentNode) modal.parentNode.removeChild(modal); modal = null; }, 250);
+  }
+  function openModal(img) {
+    if (modal) { closeModal(); return; }
+    modal = document.createElement('div');
+    modal.className = 'gov-image-modal';
+    var content = document.createElement('div');
+    content.className = 'gov-image-modal-content';
+    var cloned = img.cloneNode(true);
+    cloned.removeAttribute('style');
+    content.appendChild(cloned);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    setTimeout(function () { modal.classList.add('show'); }, 10);
+    modal.addEventListener('click', function (e) {
+      if (e.target === modal) closeModal();
+    });
+    var escHandler = function (e) {
+      if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', escHandler); }
+    };
+    document.addEventListener('keydown', escHandler);
+  }
+  document.addEventListener('dblclick', function (e) {
+    var target = e.target;
+    if (target && target.tagName === 'IMG' && target.closest('.gov-container')) {
+      e.preventDefault();
+      openModal(target);
+    }
+  });
+})();
+</script>
+</body>
+</html>
