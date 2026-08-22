@@ -1,0 +1,63 @@
+
+全丰明剑
+安航
+鸿顺发
+佳洋
+delete from eclh;
+delete from eclb;
+delete from xsjhdxd;
+delete from thxd;
+delete from thxdb;
+delete from thqrh;
+delete from thqrb;
+delete from thqrs;
+delete from xsth;
+delete from xsthb;
+delete from qgdh;
+delete from qgdb;
+delete from hpoh;
+delete from hpob;
+delete from nswh;
+delete from nswb;
+delete from cgrkh;
+delete from cgrkb;
+delete from cgth;
+delete from cgthb;
+delete from sccltmk;
+delete from ilih;
+delete from kcswh;
+delete from fsoh;
+delete from fsob;
+delete from fsof;
+delete from fsoscbg;
+delete from fsowgrk;
+delete from sclzk;
+delete from sclzkb;
+delete from gxrw;
+delete from scdjjl;
+delete from jsw;
+delete from jswb;
+delete from jswf;
+delete from scrk;
+delete from scrkb;
+delete from scrkzjb;
+delete from mjtz;
+delete from mjczjl;
+delete from mjwxsqjl;
+delete from kfp;
+delete from jyxm;
+delete from wgjydh;
+delete from wgjydb;
+delete from gczjdh;
+delete from gczjdb;
+delete from gcjydh;
+delete from gcjydb;
+delete from wangjydh;
+delete from wangjydb;
+delete from bhgdjjl;
+delete from sbdjjlb;
+delete from sbwbjlb;
+delete from sbgzbx;
+delete from sbgzbxb;
+delete from ysjghjl;
+
