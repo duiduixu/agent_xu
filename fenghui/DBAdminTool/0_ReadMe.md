@@ -1,4 +1,54 @@
 
+## 前后端联调
+创建数据库、删除数据库
+导出：空值为\N问题，改成NULL，导入的时候如果是NULL则按字符串原样导入
+【已完成】修改表结构："BLOB/TEXT column 'name' used in key specification without a key length"
+【已完成】拆分出独立的“添加索引接口”和“删除索引接口”
+【已完成】导出：表没有主键是数据导出失败
+【已完成】表数据查询传参
+【已完成】默认值：修改默认值有Constant，删除默认值用Clear
+【已完成】修改表结构，部份成功部份失败如何处理？【部分失败时把失败/跳过操作放到外层 Data，把错误汇总文本放到外层 Errors】
+【已完成】所有接口的DbTarget中的DataBase字段都不需要传
+【已完成】复DDL查询不元数据长度转换失败问题（longtext 字段）
+检查是否存在异步阻塞问题及其他性能问题
+
+修改表名及注释
+
+请求示例：
+添加索引
+  {
+    "Target": {
+      "SourceId": 760596595065029,
+      "TableName": "orders"
+    },
+    "Indexes": [
+      {
+        "Name": "IX_orders_code",
+        "Columns": ["code"],
+        "IsUnique": false
+      }
+    ]
+  }
+
+删除索引
+  {
+    "Target": {
+      "SourceId": 760596595065029,
+      "TableName": "orders"
+    },
+    "IndexNames": ["IX_orders_code"]
+  }
+
+
+
+
+Keep	忽略	创建时不设置；修改时保留原默认值
+Clear	忽略	修改时删除默认值
+Constant	字符串	常量。数字也必须传字符串，如 "0"、"12.50"；文本传 "未命名"
+Null	忽略	默认值为 SQL NULL
+CurrentTimestamp	忽略	数据库当前本地时间表达式
+CurrentUtcTimestamp	忽略	数据库当前 UTC 时间表达式
+
 ## 现有接口
 ### 表单设计 
     获取表字段信息：/table/{linkId}/Table/{tableName}
@@ -21,7 +71,7 @@
   删除字段，丢失数据，修改主键，删除字段会引起数据丢失
   导出大量数据：如果数据在查询过程中发生变化（增删改），可能导致数据重复或遗漏
   sql控制台：执行风险SQL
-  所有接口都有DataBase参数：允许用户指定不同数据库
+  
   
 
 ## 待完成任务：

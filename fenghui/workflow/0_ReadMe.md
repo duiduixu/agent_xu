@@ -48,6 +48,9 @@ IotPlatform工作流开发方案：
 总结
 方案一：需要开发“.NET workflow模块”， 需要开发基于Spring Boot的jnpf-workflow应用（可参照JPNF，投入时间少，不太需要测试），但是未来需要维护java代码及部署java应用
 方案二：需要开发“.NET workflow模块”， 需要开发“.NET flowable模块”，相对方案一工作量要大一些，同时需要投入一定的测试时间flowable模块，但不需要维护java代码，仅部署flowable engine服务即可
+方案三：纯dotnet技术栈，全用dotnet开源的Elsa Workflows工作流引擎
+
+
 
 
 部署：
@@ -94,8 +97,22 @@ Java17/21+flowable7.0.1<
 
  
 本dotnet项目中已经开发过工作流，但该dotnet项目使用了java的工作流引擎flowable7，工作流后端dotnet代码在D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable，工作流后端dotnet通过API调用java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable，该java应用引用了D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable），工作流前端项目代码在D:\code\jnpf6.2.x\jnpf-bpmn-  v6.2.x-v1.2.x-stable。
-  接下来公司希望统一使用dotnet技术栈，想把flowable7替换成Elsa workflow，请评估并列出哪些地方需要修改？因为已有的工作流模块还没有正式上线，所以无需考虑历史数据和历史流程。因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其直接作为独立的模块集成到主dotnet项目中（必须是独立模块，未来可能会拆分为独立的服务），本次不需要修改代码，仅需告诉我有哪些地方工改即可
+  接下来公司希望统一使用dotnet技术栈，想把flowable7替换成Elsa workflow，请评估并列出哪些地方需要修改？因为已有的工作流模块还没有正式上线，所以无需考虑历史数据和历史流程。因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到主dotnet项目中（必须是独立模块，未来可能会拆分为独立的服务），本次不需要修改代码，仅需告诉我有哪些地方需要修改即可
 
   流程定义发布：转换并发布 Elsa Workflow Definition。现有的流程定义都能转换成Elsa吗？
 
   彻底重写还是适配Elsa
+
+
+  
+  当前目录所在是dotnet开发的Iot平台项目，该项目已经有表单设计功能但是没有工作流审批模块，iot平台的表单设计功能在【D:\code\iotplatformv5\02-应用模块\10-VisualDev】中，接下来需要开发工作流模块，要求工作流模块可应用于表单审批和自定义源码开发页面的审批。由于已有的JNPF老项目中已经实现过表单和工作流，请参照如下JNPF老项目为Iot平台开发工作流模块。【JNPF老项目介绍：该项目已经开发过工作流，但使用了java的工作流引擎flowable7，工作流后端dotnet代码在D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable，工作流后端dotnet通过API调用java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable，该java应用引用了D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable），工作流前端项目代码在D:\code\jnpf6.2.x\jnpf-bpmn-v6.2.x-v1.2.x-stable。】
+  接下来公司希望统一使用dotnet技术栈，所以iot平台的工作流需要使用Elsa workflow，参数老项目的同时需要注意将flowable7替换成Elsa workflow3.7.1。
+  因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到iot平台项目。由于考虑在未来将workflow独立成单独的服务，所以建议在【】中新增一个Workflow模块和一个WorkflowAdapter，Workflow模块对应jnpf中的Workflow模块，WorkflowAdapter对应JNPF的java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable中的项目以及其依赖）。
+  因为无工作流历史数据，所以无需考虑历史数据和历史流程。
+  在正式开发工作流模块之前需要输出一份技术开发文档，后续的开发都以此文档分块实现代码编写，所以该文档要求以makdown的格式输出到项目根目录中。
+  本次不需要修改代码，仅需在技术开发文档中写清楚需要开发的内容即可，要求文档内容全面，需要包含所有需要的功能，所以请详细分析并给出一个完整的技术方案以指导正式上线前的所有开发工作。
+
+  在 `02-应用模块/Workflow`、`02-应用模块/WorkflowAdapter` 新建，与现有 `06-Task/01-WorkFlow` 并列，避免混淆。
+
+  请评估并列出哪些地方需要修改？因为已有的工作流模块还没有正式上线，所以无需考虑历史数据和历史流程。因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到主dotnet项目中（必须是独立模块，未来可能会拆分为独立的服务），
+
