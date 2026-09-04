@@ -31,7 +31,7 @@ frtb工艺路线子表
 gxwhh工序维护
 iwm仓库主文件
 ilm库位主文件
-iimd物料档案表
+iimh物料档案表
 bomwh物料清单维护主表
 bomwhb物料清单维护子表
 sbxh设备型号
@@ -39,9 +39,26 @@ sbtzh设备台账主表
 djxmwh点检项目维护
 sbdjxmh设备点检项目
 sbdjxmb设备点检项目子表
-
-ilih物品库主文件？？？
+xsjhdxd销售计划待下达表
+kfp计划数据表
+fsoh车间定单主表
+fsob车间定单子表
+fsof车间定单附表
+qgdh请购单主表
+qgdb请购单子表
 gxrw工序任务
+gcjydh巡检检验记录
+gcjydb巡检检验记录从表
+sbdjjlb 设备点检记录
+dshddmx  dshddmxb待送货清单：调用函数mom_dshlist_cx  函数中从关联的三张表中取数hpoh  hpob   iimh
+wpgxjybzh 检验方案配置
+ilih  iimh  库存现有量查询
+kcswh  库存事务历史、库存流水  iimh   iwm  ilm
+sclzk sclzkb工艺流转卡
+wgjyzp  外购检验指派
+wgjydh wgjydb 外购检验单
+
+
 
 ### 限制仅允许插入和修改以下白名单表:
     avmh供应商表

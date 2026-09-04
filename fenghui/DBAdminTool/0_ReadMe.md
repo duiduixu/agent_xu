@@ -1,7 +1,15 @@
 
 ## 前后端联调
-创建数据库、删除数据库
-导出：空值为\N问题，改成NULL，导入的时候如果是NULL则按字符串原样导入
+测试数据库管理工具：不同数据类型，不同方言数据库
+创建数据库：接口已开发，没有UI，暂时没有前端页面实现
+导入功能：目前实现了【仅插入数据】这种导入模式，未实现UI中的重建表并导入、仅创建表、清空表后导入，其中“清空表导入”不太安全，容易误操作清空业务数据，可代替的操作是让用户先在控制台写SQL删除再回到这个导入页面进行数据导入，以后可以给SQL控制台加权限。另外的“重建表并导入、仅创建表”不清楚作用是什么。
+与navicat的区别，在iotPlat平台的数据库管理工具中，创建表默认会自动创建实体信息，兼容旧功能的实体管理；修改表时如果没有实体也会自动创建实体信息
+
+导出按扭，加个“是否确定导出全表数据“的提示，防止误操作，有些表数据量很大，大量操作会导致数据库宕机。
+添加和编辑表字段，缺少“是否自增长id”
+导出：空值默认用\N填充
+数据库管理工具，如果接口返回失败，你要把后端返回的错误详情显示到提醒消息中
+默认值：'a'::character varying，无法重现
 【已完成】修改表结构："BLOB/TEXT column 'name' used in key specification without a key length"
 【已完成】拆分出独立的“添加索引接口”和“删除索引接口”
 【已完成】导出：表没有主键是数据导出失败
@@ -11,6 +19,63 @@
 【已完成】所有接口的DbTarget中的DataBase字段都不需要传
 【已完成】复DDL查询不元数据长度转换失败问题（longtext 字段）
 检查是否存在异步阻塞问题及其他性能问题
+
+提交
+发布117，验证DbAdmin
+修改数据库连接，编写版本变更信息
+提交并推送
+publish 
+打包并上传禅道
+联系吴工：表单模块数据导入相关问题都已处理，已发布117，项目代码已打包并上传至禅道，可以发布了
+
+
+议将 UpdateTableMeta 改为“顺序编排 + 即时记录”，不再预生成队列。
+
+  核心调整如下：
+
+  1. 删除 CreateOperationQueue、DequeueOperation 以及 FinishBatch 中对未执行操作标记 Skipped 的逻辑。
+  2. 在 ExecuteDdlOperationAsync 内部创建当前操作对象：
+
+  var operation = new TableSchemaOperationResultDto
+  {
+      Sequence = batch.Operations.Count + 1,
+      OperationType = operationType,
+      ObjectName = objectName
+  };
+
+  batch.Operations.Add(operation);
+
+  3. CompleteDdlOperation 同样直接创建并加入操作结果，用于“主键字段变更但无需执行 DDL”等组合操作场景。
+  4. ExecuteEntitySyncAsync 也创建一条 SyncEntityManage 操作记录，成功或失败都更新该对象状态。
+  5. CompleteUpdateAsync 只根据当前已经执行过的操作计算结果：
+
+  result.Success = result.Operations.Count > 0 &&
+                   result.Operations.All(operation => operation.Success);
+
+  失败时，当前失败操作会保留，后续代码直接 return await CompleteUpdateAsync()，因此不会返回任何未来步骤，也不会再生成 Skipped 记录。
+  6. UpdateTableMeta 中的执行代码保持现有顺序不变：
+
+  更新表元数据
+  同步实体管理
+  删除索引
+  创建临时索引
+  删除主键
+  修改字段
+  新增字段
+  删除字段
+  创建主键
+  删除临时索引
+  创建索引
+
+  这种方式的优点是：新增步骤只需要在执行流程中增加一段代码，不需要再同步修改一个独立的队列生成方法；操作序号也由 batch.Operations.Count + 1 自动生成，执行顺序和返回结果天然一致。
+
+  需要同步更新现有测试：
+
+  - 删除或改写依赖 CreateOperationQueue 的测试；
+  - 增加操作序号连续性测试；
+  - 增加失败后不包含后续操作的测试；
+  - 增加实体同步成功、失败时均写入 SyncEntityManage 结果的测试；
+  - 保留 DDL 审计日志及既有主键、Identity 操作顺序测试。
 
 修改表名及注释
 

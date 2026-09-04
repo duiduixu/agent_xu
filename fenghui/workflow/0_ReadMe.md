@@ -104,15 +104,19 @@ Java17/21+flowable7.0.1<
   彻底重写还是适配Elsa
 
 
-  
-  当前目录所在是dotnet开发的Iot平台项目，该项目已经有表单设计功能但是没有工作流审批模块，iot平台的表单设计功能在【D:\code\iotplatformv5\02-应用模块\10-VisualDev】中，接下来需要开发工作流模块，要求工作流模块可应用于表单审批和自定义源码开发页面的审批。由于已有的JNPF老项目中已经实现过表单和工作流，请参照如下JNPF老项目为Iot平台开发工作流模块。【JNPF老项目介绍：该项目已经开发过工作流，但使用了java的工作流引擎flowable7，工作流后端dotnet代码在D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable，工作流后端dotnet通过API调用java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable，该java应用引用了D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable），工作流前端项目代码在D:\code\jnpf6.2.x\jnpf-bpmn-v6.2.x-v1.2.x-stable。】
-  接下来公司希望统一使用dotnet技术栈，所以iot平台的工作流需要使用Elsa workflow，参数老项目的同时需要注意将flowable7替换成Elsa workflow3.7.1。
-  因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到iot平台项目。由于考虑在未来将workflow独立成单独的服务，所以建议在【】中新增一个Workflow模块和一个WorkflowAdapter，Workflow模块对应jnpf中的Workflow模块，WorkflowAdapter对应JNPF的java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable中的项目以及其依赖）。
-  因为无工作流历史数据，所以无需考虑历史数据和历史流程。
-  在正式开发工作流模块之前需要输出一份技术开发文档，后续的开发都以此文档分块实现代码编写，所以该文档要求以makdown的格式输出到项目根目录中。
-  本次不需要修改代码，仅需在技术开发文档中写清楚需要开发的内容即可，要求文档内容全面，需要包含所有需要的功能，所以请详细分析并给出一个完整的技术方案以指导正式上线前的所有开发工作。
 
-  在 `02-应用模块/Workflow`、`02-应用模块/WorkflowAdapter` 新建，与现有 `06-Task/01-WorkFlow` 并列，避免混淆。
+工作流模块开发：
+当前目录所在是dotnet开发的Iot平台项目，该项目已经有表单设计功能但是没有工作流审批模块，iot平台的表单设计功能在【D:\code\iotplatformv5\02-应用模块\10-VisualDev】中，接下来需要开发工作流模块，要求工作流模块可应用于表单审批和自定义源码开发页面的审批。由于已有的JNPF老项目中已经实现过表单和工作流，请参照如下JNPF老项目为Iot平台开发工作流模块。【JNPF老项目介绍：该项目已经开发过工作流，但使用了java的工作流引擎flowable7，工作流后端dotnet代码在D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable，工作流后端dotnet通过API调用java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable，该java应用引用了D:\code\jnpf6.2.x\jnpf-workflow-core-v6.2.x-stable），工作流前端项目代码在D:\code\jnpf6.2.x\jnpf-bpmn-v6.2.x-v1.2.x-stable。】
+接下来公司希望统一使用dotnet技术栈，所以iot平台的工作流需要使用Elsa workflow，参数老项目的同时需要注意将flowable7替换成Elsa workflow3.7.1。
+因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到iot平台项目。由于考虑在未来将工作流独立成单独的服务，所以建议在【02-应用模块】中新增一个17-WorkFlowPlat模块和一个18-WorkFlowPlatAdapter，WorkFlowPlat模块对应jnpf中的Workflow模块，WorkFlowPlatAdapter对应JNPF的java工作流应用（在D:\code\jnpf6.2.x\jnpf-workflow-v6.2.x-stable中的项目以及其依赖），本次开发的工作流模板与02-应用模块/06-Task/01-WorkFlow中的工作流模块无关，请注意命名区分
+因为无工作流历史数据，所以无需考虑历史数据和历史流程。
+在正式开发工作流模块之前需要输出一份总体技术开发文档，本次主要任务是实现后端代码，前端会由其他团队实现，所以前端部份仅需在文档中提供实现方案即可，前端实现方案需要包含待实现或改造的任务明细，后续的开发都以此文档分块实现代码编写，所以该文档要求以makdown的格式输出到项目根目录中。
+本次技术开发文档仅要求覆盖流程设计、发布、发起、待办/已办、同意/拒绝/退回/撤回、转办/加签、抄送、评论、历史与权限、条件网关功能。暂不做复杂系统集成节点（比如并行/包容网关、定时器、子流程、脚本/HTTP节点、消息通知、异常补偿和监控运维等功能）
+本次不需要修改代码，仅需在技术开发文档中写清楚需要开发的内容即可，要求文档内容全面，需要包含所有需要的功能，所以请详细分析并给出一个完整的技术方案以指导正式上线前的所有开发工作。
 
-  请评估并列出哪些地方需要修改？因为已有的工作流模块还没有正式上线，所以无需考虑历史数据和历史流程。因为统一了技术栈，不需要独立部署工作流引擎服务，可直接将其作为独立的模块集成到主dotnet项目中（必须是独立模块，未来可能会拆分为独立的服务），
+ 
+请为“JNPF老项目”生成一份可供开发人员学习的详细的技术文档，要求包含快速入门到精通的可供前端和后端开发人员学习的资料
+
+
+ 
 
